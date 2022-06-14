@@ -28,8 +28,8 @@ def broadcast(messsage):
         x.send(messsage)
 
 # Need function to handle messages from clients
-def handler()
+def handler():
 # Need additional non core administrative functions or similiar
 
-#print ("Server open for connection...")
+# print ("Server open for connection...")
 # ready to receieve connection 
