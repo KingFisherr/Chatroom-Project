@@ -15,18 +15,20 @@ socket.listen()
 clients = [] # or sockets
 nicknames_list = []
 
+# Need function to receieve connection from client
+def receive():
+    while True:
+        clientconn, address = server.accept()
+        print (f"Connection to {address} established...")
+
+
 # Need function to send message to all clients
+def broadcast(messsage):
+    for x in clients:
+        x.send(messsage)
 
 # Need function to handle messages from clients
-
-# Need function to receieve connection from client
-while True:
-    clientconn, address = s.accept()
-    print (f"Connection to {address} established...")
-    with clientconn:
-        clientconn.send(b"You have been connected to server!")
-
-        
+def handler()
 # Need additional non core administrative functions or similiar
 
 #print ("Server open for connection...")
