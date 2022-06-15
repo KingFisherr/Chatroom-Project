@@ -29,6 +29,7 @@ def broadcast(messsage):
 
 # Need function to handle messages from clients
 def handler():
+    
 # Need additional non core administrative functions or similiar
 
 # print ("Server open for connection...")
