@@ -1,5 +1,6 @@
 import socket
 import threading
+from crypter import AESCrypter
 
 host = "127.0.0.1"
 port = 1338
