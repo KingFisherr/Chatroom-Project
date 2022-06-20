@@ -27,8 +27,16 @@ class database:
             
             print ("User Database created!")
 
-    #def checklogin(self, username, password):
-      
+    def checklogin(self, username, password):    
+        conn = sqlite3.connect('user_database.sqlite')
+        c = conn.cursor()
+        statement = (f'''SELECT username from "userinfo" WHERE username="{username}" AND password = "{password}"''')
+        c.execute(statement)
+        if not c.fetchone():  # An empty result evaluates to False.
+            print("Login failed")
+        else:
+            print("Welcome")
+
     def storelogin(self, username, password):
         conn = sqlite3.connect('user_database.sqlite') 
         c = conn.cursor()    
@@ -38,7 +46,7 @@ class database:
 
         conn.commit()       
 
-# db = database()
+db = database()
 # db.checkfordb()
-# db.storelogin('bot', 'botpass')
+db.checklogin('bot', 'botpass2')
 # db.checkdb()
