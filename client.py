@@ -1,5 +1,6 @@
 import socket
-import threading 
+import threading
+from crypter import AESCrypter
 
 # Username for current client
 username = input("Choose live chat username: ")
