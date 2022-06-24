@@ -37,24 +37,43 @@ def receive():
         username_list.append(username)
 
         print(f"Client's username is {username}")
-         
+        
         # Call broadcast func to send a message to all clients
         # message will notify all clients of a newly joined client
-
+        broadcast(f'{username} has joined the server'.encode())
         clientconn.send("You are now connected to the live chat server".encode())
 
         #Multiple client
 
-        #thread = threading.Thread(target= )
+        thread = threading.Thread(target=handler, args=(clientconn,))
+        thread.start()
 
 # Need function to send message to all clients
-#def broadcast(messsage):
-    #for x in clients:
-        #x.send(messsage)
+def broadcast(messsage):
+    for x in clients:
+        x.send(messsage)
 
 # Need function to handle messages from clients
-#def handler():
-    
+
+def handler(client):
+
+    while True:
+        try:
+            message = client.recv(1024)
+
+            broadcast(message)
+        except:
+            # Broadcast the user has disconnected
+            index = clients.index(client)
+            username = username_list[index]
+            broadcast(f'{username} has left the chat'.encode())
+
+            # Disconnect client from server and remove from list
+            clients.remove(client)
+            client.close()
+            username_list.remove(username)
+            break
+
 # Need additional non core administrative functions or similiar
 
 print ("Server open for connection")
