@@ -2,9 +2,9 @@ import socket
 import threading
 from crypter import AESCrypter
 
+# Establish server host and port via socket object
 host = "127.0.0.1"
 port = 1338
-
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -13,7 +13,10 @@ server.bind((host, port))
 # Start listening
 server.listen()
 
-clients = [] # or sockets
+# List of connected clients
+clients = [] 
+
+# List of usernames of connected clients
 username_list = []
 
 # Need function to receieve connection from client
@@ -36,37 +39,41 @@ def receive():
         clients.append (clientconn)
         username_list.append(username)
 
-        print(f"Client's username is {username}")
+        print(f"{username} is joining the server")
         
         # Call broadcast func to send a message to all clients
-        # message will notify all clients of a newly joined client
-        broadcast(f'{username} has joined the server'.encode())
+        broadcast(f'{username} has joined the server'.encode(), clientconn)
+
+        # Let client know they are now connected to the chat server
         clientconn.send("You are now connected to the live chat server".encode())
 
-        #Multiple client
+        # Handle multiple clients
 
         thread = threading.Thread(target=handler, args=(clientconn,))
         thread.start()
 
-# Need function to send message to all clients
-def broadcast(messsage):
+# Function sends message to all connected clients
+def broadcast(messsage, client):
     for x in clients:
+        if x == client:
+            continue
         x.send(messsage)
 
-# Need function to handle messages from clients
-
+# Functions handles messages sent to server by clients
 def handler(client):
 
     while True:
         try:
+            # Get message from client
             message = client.recv(1024)
 
-            broadcast(message)
+            # Broadcast message to all clients
+            broadcast(message, client)
         except:
             # Broadcast the user has disconnected
             index = clients.index(client)
             username = username_list[index]
-            broadcast(f'{username} has left the chat'.encode())
+            broadcast(f'{username} has left the chat'.encode(), client)
 
             # Disconnect client from server and remove from list
             clients.remove(client)
@@ -76,6 +83,6 @@ def handler(client):
 
 # Need additional non core administrative functions or similiar
 
+# Ready to receieve connection 
 print ("Server open for connection")
 receive()
-# ready to receieve connection 
