@@ -2,10 +2,12 @@ from base64 import b64encode, b64decode
 from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 
+#For reference I used https://pycryptodome.readthedocs.io/en/latest/src/cipher/classic.html#ofb-mode 
 #AES (Advanced Encryption Standard)
+#The Mode that we will be using is OFB (Output FeedBack)
 #note: make sure you use 1 instance of AESCrypter per client connection
 #note2: make sure you encrypt/decrypt messages sequentially
-# iv = initialization vector 
+#iv = initialization vector 
 
 class AESCrypter:
     def __init__(self):
