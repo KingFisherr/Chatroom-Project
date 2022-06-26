@@ -1,6 +1,7 @@
 import socket
 import threading
 from crypter import AESCrypter
+from dbmodels import database
 
 # Establish server host and port via socket object
 host = "127.0.0.1"
