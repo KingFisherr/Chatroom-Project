@@ -58,6 +58,7 @@ def broadcast(messsage, client):
     for x in clients:
         if x == client:
             continue
+        #time.sleep(0.5)
         x.send(messsage)
 
 # Functions handles messages sent to server by clients
