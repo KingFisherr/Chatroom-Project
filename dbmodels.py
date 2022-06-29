@@ -7,7 +7,7 @@ import sqlite3
 class database:
 
     # Method returns all user info from user_database
-    def checkdb(self):
+    def getuserinfo(self):
 
         # Connect to file
         conn = sqlite3.connect('user_database.sqlite') 
@@ -19,30 +19,37 @@ class database:
         print(c.fetchall())
 
     # Method returns all user info from ban_database
-    #
-    #
+    def getbaninfo(self):
 
-    # Method checks if user_database exists and if not creates it
-    def checkfordb(self):
+        # Connect to file
+        conn = sqlite3.connect('ban_database.sqlite') 
+        # Set cursor
+        c = conn.cursor()
+        # SQL Query
+        c.execute("SELECT username, ip FROM banned")
+        # Get results
+        print(c.fetchall())
 
-        if os.path.exists('user_database.sqlite'):
+    # Method checks if a given database exists and if not creates it
+    def checkfordb(self, dbfile):
+
+        #dbfile is name of database file
+        if os.path.exists(dbfile):
             print ("Database exists!")
             return
         else:
             # Create db
-            conn = sqlite3.connect('user_database.sqlite') 
+            conn = sqlite3.connect(dbfile) 
             c = conn.cursor()
 
-            c.execute('''CREATE TABLE IF NOT EXISTS "userinfo"([username] TEXT, [password] TEXT)''')
+            if dbfile == 'user_database.sqlite':
+                c.execute('''CREATE TABLE IF NOT EXISTS "userinfo"([username] TEXT, [password] TEXT)''')
+            elif dbfile == 'ban_database.sqlite':
+                c.execute('''CREATE TABLE IF NOT EXISTS "banned"([username] TEXT, [ip] TEXT)''')
 
             conn.commit()
             
-            print ("User Database created!")
-
-    # Method checks if ban_database exists and if not creates it
-    #
-    #
-
+            print ("Database created!")
 
     # Method checks if user login credentials are valid
     def checklogin(self, username, password):    
@@ -57,11 +64,20 @@ class database:
             print("Welcome")
 
     # Method checks if user exists in ban_database
-    #
-    #
+    def checkban(self, username, ip):    
+
+        conn = sqlite3.connect('ban_database.sqlite')
+        c = conn.cursor()
+        statement = (f'''SELECT username from "banned" WHERE username="{username}" AND ip = "{ip}"''')
+        c.execute(statement)
+        if not c.fetchone():  # An empty result evaluates to False.
+            print("Not on ban list")
+        else:
+            # Kick this client
+            print("Kick from server/disconnect")
 
     # Method to store new user credentials
-    def storelogin(self, username, password):
+    def storeuserinfo(self, username, password):
 
         conn = sqlite3.connect('user_database.sqlite') 
         c = conn.cursor()    
@@ -71,10 +87,22 @@ class database:
         conn.commit()       
 
     # Method to store user info in ban_database
-    #
-    #
+    def storebaninfo(self, username, ip):
 
-db = database()
-# db.checkfordb()
-db.checklogin('bot', 'botpass2')
+        conn = sqlite3.connect('ban_database.sqlite') 
+        c = conn.cursor()    
+        c.execute(f'''INSERT INTO "banned"(username, ip) VALUES
+                    ("{username}","{ip}")''')
+
+        conn.commit()   
+
+#'user_database.sqlite'
+# db = database()
+# db.checkfordb('ban_database.sqlite')
+# db.storebaninfo("Anakin", "ipaddress2")
+# db.checkban("Anakin","ipaddress2")
+
+# db.getbaninfo()
+
+#db.checklogin('bot', 'botpass2')
 # db.checkdb()
