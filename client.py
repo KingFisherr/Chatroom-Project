@@ -36,8 +36,10 @@ def chat():
         if thread_stopped:
             break
         user_message = f'{username}: {input("")}'
-        # Problem might be that it gets broadcasted everywhere including to client who sent message (broadcasr everyone except client who sent the message)
-        #If username == admin we will do special cases for messages (i.e. kick or ban or promote etc)
+
+        # If username == admin we will do special cases for messages (i.e. kick or ban or promote etc)
+
+        # Implement function or add on to this function for file transfer functionality
 
         clientsocket.send(user_message.encode())
 

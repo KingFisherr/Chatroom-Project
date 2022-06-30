@@ -71,6 +71,9 @@ def handler(client):
 
             # Broadcast message to all clients
             broadcast(message, client)
+
+            # Implement function or add on to this function for file transfer functionality
+            
         except:
             # Broadcast the user has disconnected
             index = clients.index(client)
