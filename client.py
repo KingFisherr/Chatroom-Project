@@ -1,9 +1,17 @@
 import socket
 import threading
+import json
 from crypter import AESCrypter
 
 # Username for current client
 username = input("Choose live chat username: ")
+
+# Password for current clietn
+password = input(f"Enter password for {username}: ")
+
+# Create tuple to store user and password in one struct
+user_pass_json = (username, password)
+user_pass_json = json.dumps(user_pass_json)
 
 # Setup client socket
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -19,14 +27,17 @@ def recieve():
         try:
             data = clientsocket.recv(1024).decode()
             if data == "Username":
-                clientsocket.send(username.encode())
+                clientsocket.send(user_pass_json.encode())
                 second_data = clientsocket.recv(1024).decode()
-                print(second_data)
+                if second_data == "Banned":
+                    print('You are banned from this server. Please contact Admin.')
+                    clientsocket.close()
+                    thread_stopped = True                     
             else:
                 print(data)
             
         except:
-            print ("Encountered some error")
+            print ("Error connecting to server")
             clientsocket.close()
             break
 

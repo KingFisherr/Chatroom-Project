@@ -59,9 +59,9 @@ class database:
         statement = (f'''SELECT username from "userinfo" WHERE username="{username}" AND password = "{password}"''')
         c.execute(statement)
         if not c.fetchone():  # An empty result evaluates to False.
-            print("Login failed")
+            return False
         else:
-            print("Welcome")
+            return True
 
     # Method checks if user exists in ban_database
     def checkban(self, username, ip):    
@@ -71,10 +71,9 @@ class database:
         statement = (f'''SELECT username from "banned" WHERE username="{username}" AND ip = "{ip}"''')
         c.execute(statement)
         if not c.fetchone():  # An empty result evaluates to False.
-            print("Not on ban list")
+            return False
         else:
-            # Kick this client
-            print("Kick from server/disconnect")
+            return True
 
     # Method to store new user credentials
     def storeuserinfo(self, username, password):
@@ -84,7 +83,8 @@ class database:
         c.execute(f'''INSERT INTO "userinfo"(username, password) VALUES
                     ("{username}","{password}")''')
 
-        conn.commit()       
+        conn.commit() 
+        return      
 
     # Method to store user info in ban_database
     def storebaninfo(self, username, ip):
@@ -98,11 +98,12 @@ class database:
 
 #'user_database.sqlite'
 # db = database()
-# db.checkfordb('ban_database.sqlite')
-# db.storebaninfo("Anakin", "ipaddress2")
-# db.checkban("Anakin","ipaddress2")
+# # db.checkfordb('ban_database.sqlite')
+
+# db.storebaninfo("justforfun@", "ipaddress2")
+# # # db.checkban("justforfun@","ipaddress2")
 
 # db.getbaninfo()
 
-#db.checklogin('bot', 'botpass2')
-# db.checkdb()
+# #db.checklogin('bot', 'botpass2')
+# # db.checkdb()
