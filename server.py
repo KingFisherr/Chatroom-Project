@@ -52,18 +52,32 @@ def receive():
             continue
         
         # NOTES
-        # Currently we can kick banned user when they connect to server via username and password should just be socket
+        # Currently we can kick banned user when they connect to server via username and password, should just be socket (ip address)
         # Need to fix login checker
+
+        # We have a username and password
+        # First check user_info database to see if given username exists
+            # If it exists we can verify both username and password
+            # Else we will store the new username and password
+
 
         # # Check for user database
         # db.checkfordb('user_database.sqlite')    
-        # # Check login validity
-        # if not db.checklogin(username, password): 
+        # # Check if username exists
+        # if db.checkusername(username): 
+        #     # If username exists then verify login
+        #     if db.checklogin(username, password):
+        #         # This is an existing user
+        #         continue
+        #     else: 
+        #         print ("Wrong password, reeenter")
+        #         # We want to disconnect client so they retry password
+        #         clientconn.send("WRONGPASS")
+        #         clientconn.close()
+        #         continue
+        # else:
         #     db.storeuserinfo(username, password)
-        #     continue
-        #     # clientconn.send("Wrong password, please try again".encode())
-        #     # clientconn.close()
-        #     # continue
+
         
 
         # Update client list and username list with new client
