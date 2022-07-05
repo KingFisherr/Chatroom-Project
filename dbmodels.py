@@ -96,8 +96,21 @@ class database:
 
         conn.commit()   
 
+    # Method to check if a specific username exist in user_info
+    def checkUsername(self, username):
+        conn = sqlite3.connect('user_database.sqlite')
+        c = conn.cursor()
+        statement = (f'''SELECT username from "userinfo" WHERE username="{username}"''')
+        c.execute(statement)
+        if not c.fetchone():  # An empty result evaluates to False.
+            return False
+        else:
+            return True        
+
 #'user_database.sqlite'
 # db = database()
+# db.getuserinfo()
+# db.checkUsername("ban")
 # # db.checkfordb('ban_database.sqlite')
 
 # db.storebaninfo("justforfun@", "ipaddress2")
