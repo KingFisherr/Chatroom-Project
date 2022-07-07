@@ -34,9 +34,13 @@ def recieve():
             if data == "Username":
                 clientsocket.send(user_pass_json.encode())
             elif data == "Banned":
-                  print('You are banned from this server. Please contact Admin.')
-                  clientsocket.close()
-                  thread_stopped = True
+                print('You are banned from this server. Please contact Admin.')
+                clientsocket.close()
+                thread_stopped = True
+            elif data == "Wrongpass":
+                print("Wrong password, try again")
+                clientsocket.close()
+                thread_stopped = True
             elif data == "IV":
                 send_iv = b64decode(clientsocket.recv(24).decode())
                 recv_iv = b64decode(clientsocket.recv(24).decode())

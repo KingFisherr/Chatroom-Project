@@ -40,7 +40,7 @@ def receive():
         #Ask client for username
         clientconn.send("Username".encode())
 
-        # Username var stores the username received from client
+        # user_pass_json var stores the username and password received from client as json
         user_pass_json = clientconn.recv(1024).decode()
         user_pass_json = json.loads(user_pass_json)
 
@@ -50,7 +50,7 @@ def receive():
         # Check for ban database
         db.checkfordb('ban_database.sqlite')
         # Check if client is banned
-        if db.checkban(username, password):
+        if db.checkban(username):
             # If client is on ban list send them ban message
             clientconn.send("Banned".encode())
             # Disconnect client from server
@@ -74,19 +74,24 @@ def receive():
 ############################################################################
         
         # NOTES
-        # Currently we can kick banned user when they connect to server via username and password should just be socket
+        # Currently we can kick banned user when they connect to server via username and password, should just be socket (ip address)
         # Need to fix login checker
 
-        # # Check for user database
-        # db.checkfordb('user_datassbase.sqlite')    
-        # # Check login validity
-        # if not db.checklogin(username, password): 
-        #     db.storeuserinfo(username, password)
-        #     continue
-        #     # clientconn.send("Wrong password, please try again".encode())
-        #     # clientconn.close()
-        #     # continue
-        
+        # Check for user database
+        db.checkfordb('user_database.sqlite')    
+        # Check if username exists
+        if db.checkUsername(username): 
+            print ("Username exists")
+            # If username exists then verify login
+            if not db.checklogin(username, password):
+                print("Password does not match")
+                # We want to disconnect client so they retry password
+                clientconn.send("Wrongpass".encode())
+                clientconn.close()
+                continue
+            else:
+                print ("stored user info")
+                db.storeuserinfo(username, password)
 
         # Update client list and username list with new client
         crypters.append(crypter)
