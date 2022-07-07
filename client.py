@@ -32,7 +32,11 @@ def recieve():
                 if second_data == "Banned":
                     print('You are banned from this server. Please contact Admin.')
                     clientsocket.close()
-                    thread_stopped = True                     
+                    thread_stopped = True   
+                elif second_data == "Wrongpass":
+                    print("Wrong password, try again")
+                    clientsocket.close()
+                    thread_stopped = True                  
             else:
                 print(data)
             
