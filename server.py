@@ -41,10 +41,12 @@ def receive():
         username = user_pass_json[0]
         password = user_pass_json[1]
 
+        # Notes argument taken in to IP
+
         # Check for ban database
         db.checkfordb('ban_database.sqlite')
         # Check if client is banned
-        if db.checkban(username, password):
+        if db.checkban(username):
             # If client is on ban list send them ban message
             clientconn.send("Banned".encode())
             # Disconnect client from server
@@ -61,22 +63,21 @@ def receive():
             # Else we will store the new username and password
 
 
-        # # Check for user database
-        # db.checkfordb('user_database.sqlite')    
-        # # Check if username exists
-        # if db.checkusername(username): 
-        #     # If username exists then verify login
-        #     if db.checklogin(username, password):
-        #         # This is an existing user
-        #         continue
-        #     else: 
-        #         print ("Wrong password, reeenter")
-        #         # We want to disconnect client so they retry password
-        #         clientconn.send("WRONGPASS")
-        #         clientconn.close()
-        #         continue
-        # else:
-        #     db.storeuserinfo(username, password)
+        # Check for user database
+        db.checkfordb('user_database.sqlite')    
+        # Check if username exists
+        if db.checkUsername(username): 
+            print ("Username exists")
+            # If username exists then verify login
+            if not db.checklogin(username, password):
+                print("Password does not match")
+                # We want to disconnect client so they retry password
+                clientconn.send("Wrongpass".encode())
+                clientconn.close()
+                continue
+        else:
+            print ("stored user info")
+            db.storeuserinfo(username, password)
 
         
 
