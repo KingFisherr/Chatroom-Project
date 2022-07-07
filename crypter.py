@@ -40,6 +40,9 @@ class AESCrypter:
         pt = self.cipher_recv.decrypt(ct_b)
         #return plain text
         return pt
+        
+    def initialized(self):
+        return self.cipher_send is not None
 
 #this code is just to test the above class
 if __name__ == '__main__':

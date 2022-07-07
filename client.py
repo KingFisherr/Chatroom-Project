@@ -1,7 +1,8 @@
+import json
 import socket
 import threading
-import json
 from crypter import AESCrypter
+from base64 import b64encode, b64decode
 
 # Username for current client
 username = input("Choose live chat username: ")
@@ -12,6 +13,9 @@ password = input(f"Enter password for {username}: ")
 # Create tuple to store user and password in one struct
 user_pass_json = (username, password)
 user_pass_json = json.dumps(user_pass_json)
+
+# Create a global crypter object
+crypter = AESCrypter()
 
 # Setup client socket
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -26,19 +30,29 @@ def recieve():
     while True:    
         try:
             data = clientsocket.recv(1024).decode()
+            print("RAW DATA {}".format(data))
             if data == "Username":
                 clientsocket.send(user_pass_json.encode())
-                second_data = clientsocket.recv(1024).decode()
-                if second_data == "Banned":
-                    print('You are banned from this server. Please contact Admin.')
-                    clientsocket.close()
-                    thread_stopped = True   
-                elif second_data == "Wrongpass":
-                    print("Wrong password, try again")
-                    clientsocket.close()
-                    thread_stopped = True                  
+            elif data == "Banned":
+                  print('You are banned from this server. Please contact Admin.')
+                  clientsocket.close()
+                  thread_stopped = True
+            elif data == "IV":
+                send_iv = b64decode(clientsocket.recv(24).decode())
+                recv_iv = b64decode(clientsocket.recv(24).decode())
+                # print(send_iv)
+                # print(recv_iv)
+                crypter.init_cipher(send_iv, recv_iv)   
+                print("iv has been initialized")
+            elif data == "":
+                raise Exception("received empty string, server probably disconnected")
             else:
-                print(data)
+                #print("crypter initialized {}".format(crypter.initialized()))
+                if(crypter.initialized()):
+                    dmesg = crypter.decrypt_string(data)
+                    print(dmesg)
+                else:
+                    print("received message before crpter initialization : {}".format(data))
             
         except:
             print ("Error connecting to server")
@@ -55,8 +69,10 @@ def chat():
         # If username == admin we will do special cases for messages (i.e. kick or ban or promote etc)
 
         # Implement function or add on to this function for file transfer functionality
+        emsg = crypter.encrypt_string(user_message)
 
-        clientsocket.send(user_message.encode())
+        #clientsocket.send(b64decode(dmsg).decode())
+        clientsocket.send(emsg)
 
 
 # recieve()
