@@ -34,7 +34,7 @@ def receive():
         #Ask client for username
         clientconn.send("Username".encode())
 
-        # Username var stores the username received from client
+        # user_pass_json var stores the username and password received from client as json
         user_pass_json = clientconn.recv(1024).decode()
         user_pass_json = json.loads(user_pass_json)
 
