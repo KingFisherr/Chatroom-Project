@@ -64,16 +64,28 @@ class database:
             return True
 
     # Method checks if user exists in ban_database
-    def checkban(self, username, ip):    
+    def checkban(self, username):    
 
         conn = sqlite3.connect('ban_database.sqlite')
         c = conn.cursor()
-        statement = (f'''SELECT username from "banned" WHERE username="{username}" AND ip = "{ip}"''')
+        statement = (f'''SELECT username from "banned" WHERE username="{username}"''')
         c.execute(statement)
         if not c.fetchone():  # An empty result evaluates to False.
             return False
         else:
             return True
+
+    # # Method checks if user exists in ban_database (via IP ONLY)
+    # def checkban(self, ip):    
+
+    #     conn = sqlite3.connect('ban_database.sqlite')
+    #     c = conn.cursor()
+    #     statement = (f'''SELECT username from "banned" WHERE ip = "{ip}"''')
+    #     c.execute(statement)
+    #     if not c.fetchone():  # An empty result evaluates to False.
+    #         return False
+    #     else:
+    #         return True
 
     # Method to store new user credentials
     def storeuserinfo(self, username, password):
@@ -110,7 +122,10 @@ class database:
 #'user_database.sqlite'
 # db = database()
 # db.getuserinfo()
-# db.checkUsername("ban")
+# if db.checklogin("plu", "seed"):
+#     print ("yes")
+# else:
+#     print ("no")
 # # db.checkfordb('ban_database.sqlite')
 
 # db.storebaninfo("justforfun@", "ipaddress2")
