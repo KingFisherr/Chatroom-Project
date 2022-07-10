@@ -25,14 +25,19 @@ thread_stopped = False
 def recieve():
     while True:    
         try:
+            # Get data from server
             data = clientsocket.recv(1024).decode()
+            # Send username and password to server
             if data == "Username":
                 clientsocket.send(user_pass_json.encode())
+                # Get response from server
                 second_data = clientsocket.recv(1024).decode()
+                # If Banned message receieved we will close client connection to server
                 if second_data == "Banned":
                     print('You are banned from this server. Please contact Admin.')
                     clientsocket.close()
                     thread_stopped = True   
+                # If Wrongpass message receieved we will close client connection to server
                 elif second_data == "Wrongpass":
                     print("Wrong password, try again")
                     clientsocket.close()
@@ -58,11 +63,7 @@ def chat():
 
         clientsocket.send(user_message.encode())
 
-
-# recieve()
-# chat()
-
-
+# Start thread recieve function and then chat function
 thread_recieve = threading.Thread(target=recieve)
 thread_recieve.start()
 thread_chat = threading.Thread(target=chat)
