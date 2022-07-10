@@ -1,8 +1,17 @@
 import socket
-import threading 
+import threading
+import json
+from crypter import AESCrypter
 
 # Username for current client
 username = input("Choose live chat username: ")
+
+# Password for current clietn
+password = input(f"Enter password for {username}: ")
+
+# Create tuple to store user and password in one struct
+user_pass_json = (username, password)
+user_pass_json = json.dumps(user_pass_json)
 
 # Setup client socket
 clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -10,8 +19,7 @@ clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 # Connect to host server
 clientsocket.connect(("127.0.0.1", 1338)) #Host/port
 
-#client chatroom status
-connect_status = False
+thread_stopped = False
 
 # Function to recieve data from server
 def recieve():
@@ -19,40 +27,39 @@ def recieve():
         try:
             data = clientsocket.recv(1024).decode()
             if data == "Username":
-                clientsocket.send(username.encode())
+                clientsocket.send(user_pass_json.encode())
                 second_data = clientsocket.recv(1024).decode()
-                print(second_data)
-            elif data == "Connected": #check if the chatroom is connected, if connected, then enter chat function.
-                connect_status = True
-            elif data == "Disconnected":
-                connect_status = False
-            elif data == "Message":
-                mess = clientsocket.recv(1024).decode()
-                print(mess)
+                if second_data == "Banned":
+                    print('You are banned from this server. Please contact Admin.')
+                    clientsocket.close()
+                    thread_stopped = True                     
             else:
                 print(data)
+            
         except:
-            print ("Encountered some error")
+            print ("Error connecting to server")
             clientsocket.close()
             break
 
 # Function to send messages to server
 def chat():
-        clientsocket.send("Message".encode())
-        text = f'{username}: {input("")}'
-        clientsocket.send(text.encode())
-        
-                        
-            
+    while True:
+        if thread_stopped:
+            break
+        user_message = f'{username}: {input("")}'
 
-recieve()
+        # If username == admin we will do special cases for messages (i.e. kick or ban or promote etc)
 
-# Message for current client after connected into chatroom
-while connect_status == True:
-    txtdata = input("Your Message: ")
-    chat()
+        # Implement function or add on to this function for file transfer functionality
 
-#thread_recieve = threading.Thread(target=recieve)
-#thread_recieve.start()
-# thread_chat = threading.Thread(target=chat)
-# thread_chat.start()
+        clientsocket.send(user_message.encode())
+
+
+# recieve()
+# chat()
+
+
+thread_recieve = threading.Thread(target=recieve)
+thread_recieve.start()
+thread_chat = threading.Thread(target=chat)
+thread_chat.start()

@@ -1,9 +1,16 @@
 import socket
 import threading
+import json
+from crypter import AESCrypter
+from dbmodels import database
 
+# Create database object from dbmodels
+db = database()
+# Create encryption/decryption object from cypter 
+
+# Establish server host and port via socket object
 host = "127.0.0.1"
 port = 1338
-
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -12,7 +19,10 @@ server.bind((host, port))
 # Start listening
 server.listen()
 
-clients = [] # or sockets
+# List of connected clients
+clients = [] 
+
+# List of usernames of connected clients
 username_list = []
 
 # Need function to receieve connection from client
@@ -25,40 +35,113 @@ def receive():
         clientconn.send("Username".encode())
 
         # Username var stores the username received from client
-        username = clientconn.recv(1024).decode()
+        user_pass_json = clientconn.recv(1024).decode()
+        user_pass_json = json.loads(user_pass_json)
 
-        # Maybe check ban database here 
+        username = user_pass_json[0]
+        password = user_pass_json[1]
 
-        # Maybe also check username/password database and implement a login system (admin will have different login)
+        # Check for ban database
+        db.checkfordb('ban_database.sqlite')
+        # Check if client is banned
+        if db.checkban(username, password):
+            # If client is on ban list send them ban message
+            clientconn.send("Banned".encode())
+            # Disconnect client from server
+            clientconn.close()
+            continue
+        
+        # NOTES
+        # Currently we can kick banned user when they connect to server via username and password, should just be socket (ip address)
+        # Need to fix login checker
+
+        # We have a username and password
+        # First check user_info database to see if given username exists
+            # If it exists we can verify both username and password
+            # Else we will store the new username and password
+
+
+        # # Check for user database
+        # db.checkfordb('user_database.sqlite')    
+        # # Check if username exists
+        # if db.checkusername(username): 
+        #     # If username exists then verify login
+        #     if db.checklogin(username, password):
+        #         # This is an existing user
+        #         continue
+        #     else: 
+        #         print ("Wrong password, reeenter")
+        #         # We want to disconnect client so they retry password
+        #         clientconn.send("WRONGPASS")
+        #         clientconn.close()
+        #         continue
+        # else:
+        #     db.storeuserinfo(username, password)
+
+        
 
         # Update client list and username list with new client
         clients.append (clientconn)
         username_list.append(username)
 
-        print(f"Client's username is {username}")
-         
-        # Call broadcast func to send a message to all clients
-        # message will notify all clients of a newly joined client
-
-        clientconn.send("You are now connected to the live chat server".encode())
-        clientconn.send("Connected".encode()) #to change the connect status in client side
-        # This one code below determine if the user is online or offline
-        #clientconn.send("Disconnected".encode())
+        print(f"{username} is joining the server")
         
-        #Multiple client
+        # Call broadcast func to send a message to all clients
+        broadcast(f"{username} has joined the server".encode(), clientconn)
 
-        #thread = threading.Thread(target= )
+        # Let client know they are now connected to the chat server
+        clientconn.send("You are now connected to the live chat server".encode())
 
-# Need function to send message to all clients
-#def broadcast(messsage):
-    #for x in clients:
-        #x.send(messsage)
+        # Handle multiple clients
 
-# Need function to handle messages from clients
-#def handler():
-    
+        thread = threading.Thread(target=handler, args=(clientconn,))
+        thread.start()
+
+# Function sends message to all connected clients
+def broadcast(messsage, client):
+    for x in clients:
+        if x == client:
+            continue
+        #time.sleep(0.5)
+        x.send(messsage)
+
+#we add commands here
+def commands(message1, client):
+    if "//chatmember" in str(message1):
+        final = str(username_list)
+        client.send(final.encode())
+    else:
+        client.send("Command Not Found".encode())
+
+# Functions handles messages sent to server by clients
+def handler(client):
+
+    while True:
+        try:
+            # Get message from client
+            message = client.recv(1024)
+            if "//" in str(message):
+                commands(message, client)
+            # Broadcast message to all clients
+            else:
+                broadcast(message, client)
+
+            # Implement function or add on to this function for file transfer functionality
+            
+        except:
+            # Broadcast the user has disconnected
+            index = clients.index(client)
+            username = username_list[index]
+            broadcast(f'{username} has left the chat'.encode(), client)
+
+            # Disconnect client from server and remove from list
+            clients.remove(client)
+            client.close()
+            username_list.remove(username)
+            break
+
 # Need additional non core administrative functions or similiar
 
+# Ready to receieve connection 
 print ("Server open for connection")
 receive()
-# ready to receieve connection 
