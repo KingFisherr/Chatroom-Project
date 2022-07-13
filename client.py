@@ -29,7 +29,9 @@ thread_stopped = False
 def recieve():
     while True:    
         try:
+            # Get data from server
             data = clientsocket.recv(1024).decode()
+
             print("RAW DATA {}".format(data))
             if data == "Username":
                 clientsocket.send(user_pass_json.encode())
@@ -50,6 +52,7 @@ def recieve():
                 print("iv has been initialized")
             elif data == "":
                 raise Exception("received empty string, server probably disconnected")
+
             else:
                 #print("crypter initialized {}".format(crypter.initialized()))
                 if(crypter.initialized()):
@@ -78,11 +81,7 @@ def chat():
         #clientsocket.send(b64decode(dmsg).decode())
         clientsocket.send(emsg)
 
-
-# recieve()
-# chat()
-
-
+# Start thread recieve function and then chat function
 thread_recieve = threading.Thread(target=recieve)
 thread_recieve.start()
 thread_chat = threading.Thread(target=chat)
