@@ -1,7 +1,10 @@
+import json
+import time
 import socket
 import threading
-import json
 from crypter import AESCrypter
+from Crypto.Random import get_random_bytes
+from base64 import b64encode, b64decode
 from dbmodels import database
 
 # Create database object from dbmodels
@@ -25,6 +28,9 @@ clients = []
 # List of usernames of connected clients
 username_list = []
 
+### List of crypters
+crypters = []
+
 # Need function to receieve connection from client
 def receive():
     while True:
@@ -41,8 +47,6 @@ def receive():
         username = user_pass_json[0]
         password = user_pass_json[1]
 
-        # Notes argument taken in to IP
-
         # Check for ban database
         db.checkfordb('ban_database.sqlite')
         # Check if client is banned
@@ -52,16 +56,26 @@ def receive():
             # Disconnect client from server
             clientconn.close()
             continue
+            
+########################################################################        
+        #init crypter
+        crypter = AESCrypter()
+        send_iv = get_random_bytes(16)
+        recv_iv = get_random_bytes(16)
+        crypter.init_cipher(send_iv, recv_iv)
+
+        # print(send_iv)
+        # print(recv_iv)
+
+        clientconn.send("IV".encode())
+        time.sleep(1)
+        clientconn.send(b64encode(recv_iv))
+        clientconn.send(b64encode(send_iv))
+############################################################################
         
         # NOTES
         # Currently we can kick banned user when they connect to server via username and password, should just be socket (ip address)
         # Need to fix login checker
-
-        # We have a username and password
-        # First check user_info database to see if given username exists
-            # If it exists we can verify both username and password
-            # Else we will store the new username and password
-
 
         # Check for user database
         db.checkfordb('user_database.sqlite')    
@@ -75,60 +89,82 @@ def receive():
                 clientconn.send("Wrongpass".encode())
                 clientconn.close()
                 continue
-        else:
-            print ("stored user info")
-            db.storeuserinfo(username, password)
-
-        
+            else:
+                print ("stored user info")
+                db.storeuserinfo(username, password)
 
         # Update client list and username list with new client
-        clients.append (clientconn)
+        crypters.append(crypter)
+        clients.append(clientconn)
         username_list.append(username)
 
         print(f"{username} is joining the server")
         
         # Call broadcast func to send a message to all clients
-        broadcast(f"{username} has joined the server".encode(), clientconn)
-
+        broadcast(f"{username} has joined the server", clientconn)
+        
         # Let client know they are now connected to the chat server
-        clientconn.send("You are now connected to the live chat server".encode())
-
+        cstr = crypter.encrypt_string("You are now connected to the live chat server")
+        clientconn.send(cstr)
+        
         # Handle multiple clients
-
         thread = threading.Thread(target=handler, args=(clientconn,))
         thread.start()
 
 # Function sends message to all connected clients
-def broadcast(messsage, client):
+def broadcast(message, client):
+    print(f"broadcasting {message}")
     for x in clients:
         if x == client:
             continue
-        #time.sleep(0.5)
-        x.send(messsage)
+        
+        try:
+            index = clients.index(x)
+            crypter = crypters[index]
+            emsg = crypter.encrypt_string(message)
+            #print(emsg)
+            time.sleep(0.5)
+            x.send(emsg)
+        except Exception as ex:
+            print(ex)
 
 # Functions handles messages sent to server by clients
 def handler(client):
-
+    
+    index = clients.index(client)
+    crypter = crypters[index]
+    
     while True:
         try:
             # Get message from client
             message = client.recv(1024)
-
+            
+            if(message == ""):
+                raise Exception("exception: received empty string") 
+            
+            print("RECEIVED RAW {}".format(message))
+            dmsg = crypter.decrypt_string(message)
+            
+            print("received {}".format(dmsg))
+            
             # Broadcast message to all clients
-            broadcast(message, client)
-
+            broadcast(dmsg.decode(), client)
+            
             # Implement function or add on to this function for file transfer functionality
             
-        except:
+        except Exception as ex:
+            print(ex)
             # Broadcast the user has disconnected
             index = clients.index(client)
             username = username_list[index]
-            broadcast(f'{username} has left the chat'.encode(), client)
-
+            broadcast(f'{username} has left the chat', client)
+            
+            # not thread safe, data race
             # Disconnect client from server and remove from list
+            crypters.remove(crypter)
+            username_list.remove(username)
             clients.remove(client)
             client.close()
-            username_list.remove(username)
             break
 
 # Need additional non core administrative functions or similiar
