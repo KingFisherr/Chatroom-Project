@@ -1,5 +1,7 @@
 import json
 import socket
+import stdiomask
+import getpass
 import threading
 from crypter import AESCrypter
 from base64 import b64encode, b64decode
@@ -7,8 +9,10 @@ from base64 import b64encode, b64decode
 # Username for current client
 username = input("Choose live chat username: ")
 
-# Password for current clietn
-password = input(f"Enter password for {username}: ")
+# Password for current client
+#password = getpass.getpass(f"Enter password for {username}: ")
+password = stdiomask.getpass(f"Enter password for {username}: ")
+#password = input(f"Enter password for {username}: ")
 
 # Create tuple to store user and password in one struct
 user_pass_json = (username, password)
@@ -29,14 +33,19 @@ thread_stopped = False
 def recieve():
     while True:    
         try:
+            # Get data from server
             data = clientsocket.recv(1024).decode()
-            print("RAW DATA {}".format(data))
+            # print("RAW DATA {}".format(data))
+            # Send username and password to server
             if data == "Username":
+                # Get response from server
                 clientsocket.send(user_pass_json.encode())
+            # If Banned message received we will close client connection to server
             elif data == "Banned":
                 print('You are banned from this server. Please contact Admin.')
                 clientsocket.close()
                 thread_stopped = True
+            # If wrongpass message received we will close client connnection to server
             elif data == "Wrongpass":
                 print("Wrong password, try again")
                 clientsocket.close()
@@ -44,17 +53,14 @@ def recieve():
             elif data == "IV":
                 send_iv = b64decode(clientsocket.recv(24).decode())
                 recv_iv = b64decode(clientsocket.recv(24).decode())
-                # print(send_iv)
-                # print(recv_iv)
                 crypter.init_cipher(send_iv, recv_iv)   
-                print("iv has been initialized")
+                # print("iv has been initialized")
             elif data == "":
                 raise Exception("received empty string, server probably disconnected")
             else:
-                #print("crypter initialized {}".format(crypter.initialized()))
                 if(crypter.initialized()):
                     dmesg = crypter.decrypt_string(data)
-                    print(dmesg)
+                    print(dmesg.decode())
                 else:
                     print("received message before crpter initialization : {}".format(data))
             

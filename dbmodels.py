@@ -1,10 +1,23 @@
 # databasemodels.py
 import os
 import sqlite3
+import bcrypt
 
 # Class database gives access to methods used to access sqllite databases
 
 class database:
+    
+    def deleteRecord(self, name):
+        conn = sqlite3.connect('user_database.sqlite') 
+        c = conn.cursor()
+        
+        # Deleting all records 
+        # f'DELETE FROM userinfo where username = {name}'
+        sql_delete_query = "DELETE FROM userinfo"
+        c.execute(sql_delete_query)
+        conn.commit()
+        print("Record deleted successfully ")
+        c.close()
 
     # Method returns all user info from user_database
     def getuserinfo(self):
@@ -32,14 +45,13 @@ class database:
 
     # Method checks if a given database exists and if not creates it
     def checkfordb(self, dbfile):
-
         #dbfile is name of database file
         if os.path.exists(dbfile):
-            print ("Database exists!")
+            # print ("Database exists!")
             return
         else:
             # Create db
-            conn = sqlite3.connect(dbfile) 
+            conn = sqlite3.connect(dbfile)
             c = conn.cursor()
 
             if dbfile == 'user_database.sqlite':
@@ -51,7 +63,7 @@ class database:
             
             print ("Database created!")
 
-    # Method checks if user login credentials are valid
+    # Method checks if user login credentials are valid against plain text password
     def checklogin(self, username, password):    
 
         conn = sqlite3.connect('user_database.sqlite')
@@ -62,7 +74,24 @@ class database:
             return False
         else:
             return True
+            
+    # Method checks if user login credentials are valid against a bcrypt hash
+    def checkloginHash(self, username, password):    
 
+        conn = sqlite3.connect('user_database.sqlite')
+        c = conn.cursor()
+        statement = (f'''SELECT password from "userinfo" WHERE username="{username}"''')
+        c.execute(statement)
+        row = c.fetchone()
+        if not row:  # An empty result evaluates to False.
+            return False
+        else:
+            hashed = str(row[0])
+            if bcrypt.checkpw(password.encode(), hashed.encode()):
+                return True
+            else:
+            	return False
+                
     # Method checks if user exists in ban_database
     def checkban(self, username):    
 
