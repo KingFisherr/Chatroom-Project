@@ -1,5 +1,7 @@
 import json
 import socket
+import stdiomask
+import getpass
 import threading
 from crypter import AESCrypter
 from base64 import b64encode, b64decode
@@ -10,8 +12,10 @@ from tkinter import simpledialog
 # Username for current client
 username = input("Choose live chat username: ")
 
-# Password for current clietn
-password = input(f"Enter password for {username}: ")
+# Password for current client
+#password = getpass.getpass(f"Enter password for {username}: ")
+password = stdiomask.getpass(f"Enter password for {username}: ")
+#password = input(f"Enter password for {username}: ")
 
 # Create tuple to store user and password in one struct
 user_pass_json = (username, password)
@@ -34,14 +38,17 @@ def recieve():
         try:
             # Get data from server
             data = clientsocket.recv(1024).decode()
-
-            print("RAW DATA {}".format(data))
+            
+            # Send username and password to server
             if data == "Username":
+                # Get response from server
                 clientsocket.send(user_pass_json.encode())
+            # If Banned message received we will close client connection to server
             elif data == "Banned":
                 print('You are banned from this server. Please contact Admin.')
                 clientsocket.close()
                 thread_stopped = True
+            # If wrongpass message received we will close client connnection to server
             elif data == "Wrongpass":
                 print("Wrong password, try again")
                 clientsocket.close()
@@ -49,26 +56,15 @@ def recieve():
             elif data == "IV":
                 send_iv = b64decode(clientsocket.recv(24).decode())
                 recv_iv = b64decode(clientsocket.recv(24).decode())
-                # print(send_iv)
-                # print(recv_iv)
                 crypter.init_cipher(send_iv, recv_iv)   
-                print("iv has been initialized")
             elif data == "":
                 raise Exception("received empty string, server probably disconnected")
-
             else:
-                # if gui_running:
-                #     self.text_area.config(state = 'normal') 
-                #     self.text_area.insert('end', message)
-                #     self.text_area.yview('end')
-                #     self.text_area.config(state = 'disabled')
-                #print("crypter initialized {}".format(crypter.initialized()))
                 if(crypter.initialized()):
                     dmesg = crypter.decrypt_string(data)
-                    print(dmesg)
+                    print(dmesg.decode())
                 else:
                     print("received message before crpter initialization : {}".format(data))
-            
         except:
             print ("Error connecting to server")
             clientsocket.close()
@@ -91,6 +87,14 @@ def chat():
         clientsocket.send(emsg)
 
         #self.input_area.delete('1.0', 'end')
+
+# idk what to do with this
+# if gui_running:
+#     self.text_area.config(state = 'normal') 
+#     self.text_area.insert('end', message)
+#     self.text_area.yview('end')
+#     self.text_area.config(state = 'disabled')
+# print("crypter initialized {}".format(crypter.initialized()))
 
 # def gui_loop():
 #     win = tkinter.Tk()
