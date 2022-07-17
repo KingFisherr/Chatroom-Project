@@ -42,11 +42,12 @@ def handler(client):
             # Broadcast the user has disconnected
             index = clients.index(client)
             username = username_list[index]
-            broadcast(f'{username} has left the chat'.encode(), client)
+            client.close()
+            broadcast_disconnected(f"{username} has left the chat\n".encode(), client)
 
             # Disconnect client from server and remove from list
             clients.remove(client)
-            client.close()
+            #client.close()
             username_list.remove(username)
             break
 
@@ -121,16 +122,22 @@ def receive():
         broadcast(f"{username} has joined the server\n".encode(), clientconn)
 
         # Let client know they are now connected to the chat server
-        #clientconn.send("You are now connected to the live chat server".encode())
+        # clientconn.send("You are now connected to the live chat server".encode())
 
         # Handle multiple clients
-
         handlerthread = threading.Thread(target=handler, args=(clientconn,))
         handlerthread.start()
 
-# Function sends message to all connected clients
+# Function sends message to all clients
 def broadcast(messsage, client):
     for x in clients:
+        x.send(messsage)
+
+# Function sends message only to all connected clients
+def broadcast_disconnected(messsage, client):
+    for x in clients:
+        if x == client:
+            continue
         x.send(messsage)
 
 # Need additional non core administrative functions or similiar
