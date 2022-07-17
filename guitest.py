@@ -1,4 +1,3 @@
-import imp
 import json
 import socket
 import threading
@@ -15,20 +14,24 @@ PORT = 1338
 class Client:
     def __init__(self, host, port):
 
+        # Connect to server
         self.clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
         self.clientsocket.connect((host, port)) #Host/port
 
+        # Create window for login
         msgbox = tkinter.Tk()
         msgbox.withdraw()
 
+        # Create login elements
         self.username = simpledialog.askstring("Username","Please enter nickname: ", parent = msgbox)
         self.password = simpledialog.askstring("Password", "Enter password", parent = msgbox)
 
+        # Store username and password in json var
         self.user_pass_json = (self.username,self.password)
         self.user_pass_json = json.dumps(self.user_pass_json)
 
-
+        # Set GUI_DONE to false and GUI_RUNNING to true
         self.gui_done = False
         self.gui_running = True
 
@@ -41,6 +44,9 @@ class Client:
         thread_recieve.start()
         #thread_chat.start()
 
+    # Create chat GUI window for client 
+        # Needs to look nicer
+        # Button for sending file
     def gui_loop(self):
         self.win = tkinter.Tk()
         self.win.configure(bg = "lightgray")
@@ -66,7 +72,12 @@ class Client:
 
         self.gui_done = True
 
-        self.win.protocol("WM_DELETE_WINDOW", self.stopp)
+
+        # When window is closed we call end function
+        self.win.protocol("WM_DELETE_WINDOW", self.end)
+
+        # Binds return button to func
+        #self.win.bind('<Return>', self.chat)
 
         self.win.mainloop()
     
@@ -79,14 +90,23 @@ class Client:
                 print("RAW DATA {}".format(data))
                 if data == "Username":
                     self.clientsocket.send(self.user_pass_json.encode())
+
+                # If banned let client know, disconnect and end gui window
                 elif data == "Banned":
                     print('You are banned from this server. Please contact Admin.')
                     self.clientsocket.close()
+                    self.gui_done = True
+                    self.end()
                     thread_stopped = True
+
+                # If wrong pass let client know, disconnect and end gui window
                 elif data == "Wrongpass":
                     print("Wrong password, try again")
                     self.clientsocket.close()
+                    self.gui_done = True
+                    self.end()
                     thread_stopped = True
+
                 # elif data == "IV":
                 #     send_iv = b64decode(clientsocket.recv(24).decode())
                 #     recv_iv = b64decode(clientsocket.recv(24).decode())
@@ -115,21 +135,20 @@ class Client:
                 self.clientsocket.close()
                 break
     
-    def chat(self):
-        # if thread_stopped:
-        #     break       
+    def chat(self, _event=None):     
         message = f"{self.username}: {self.message_box.get('1.0', 'end')}"
         self.clientsocket.send(message.encode())
         self.message_box.delete('1.0', 'end')          
 
 
-
-    def stopp(self):
+    # Stop GUI and close client socket
+    def end(self):
+        self.clientsocket.close()
         self.gui_running = False
         self.win.destroy()
-        self.clientsocket.close()
+        #self.clientsocket.close()
         exit(0)
 
     
-    
+# Initialize client object
 client = Client(HOST, PORT)
