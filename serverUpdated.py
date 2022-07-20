@@ -183,6 +183,11 @@ def kick(mess,client1):
         target = re.findall(r"kick\s.+",str(mess))
         target[0] = target[0].replace("kick ","")
         target[0] = target[0].replace("'","")
+        target[0] = target[0].replace("n","")
+        target[0] = target[0].replace("\\","")
+        print(mess)
+        print(target[0])
+        print(transverse(target[0]))
         #if they found a client ip address with transverse function
         if str(transverse(target[0])) != "-1":
             found = transverse(target[0])
@@ -190,10 +195,10 @@ def kick(mess,client1):
             found.close()
         #if the function can't find a user, then there exist no user in the database
         else:
-            client1.send("User doesn't exist please double check".encode())
+            client1.send("User doesn't exist please double check\n".encode())
     #if we didnt have a "/kick user" in the format then we will return the message.
     else:
-        client1.send("Please check if you have the right format for the command".encode())
+        client1.send("Please check if you have the right format for the command\n".encode())
 
 # current number of people inside the chat room
 def chat_member(client1):
@@ -219,7 +224,10 @@ def bans(mess,client1):
         target = re.findall(r"ban\s.+",str(mess))
         target[0] = target[0].replace("ban ","")
         target[0] = target[0].replace("'","")
+        target[0] = target[0].replace("n","")
+        target[0] = target[0].replace("\\","")
         # if subject is found in the user list
+        print(mess)
         print(target[0])
         print(transverse(target[0]))
         if str(transverse(target[0])) != "-1":
@@ -229,15 +237,15 @@ def bans(mess,client1):
             found.close()
         # else return a message if didnt find the subject in the database
         else:
-            client1.send("User doesn't exist please double check".encode())
+            client1.send("User doesn't exist please double check\n".encode())
     # if didnt find the subjest in the text
     else:
-        client1.send("Please check if you have the right format for the command".encode())
+        client1.send("Please check if you have the right format for the command\n".encode())
 
 
 #admin function,make a user to become admin
 def New_admin(client1,name_client):
-    client1.send("Please enter the code you get from the Staff".encode())
+    client1.send("Please enter the code you get from the Staff\n".encode())
     #receive code from the user
     codes = client1.recv(1024).decode()
     #extract the code from the message
@@ -247,10 +255,10 @@ def New_admin(client1,name_client):
     #if password matches, then add user into admin list
     if txts[0] == "Passcodes": #you can change the password here
         adminadd(name_client)
-        client1.send("You are now an admin".encode())
+        client1.send("You are now an admin\n".encode())
     # send a message if the passcode is wrong
     else:
-        client1.send("Wrong passcode, try again".encode())
+        client1.send("Wrong passcode, try again\n".encode())
 
 
 #we add commands here
@@ -274,7 +282,7 @@ def commands(message1, client):
 
         
     else:
-        client.send("Command Not Found, Use /help to Check for Command".encode())
+        client.send("Command Not Found, Use /help to Check for Command\n".encode())
 
 
 # Function sends message only to all connected clients
