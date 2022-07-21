@@ -1,4 +1,5 @@
 import socket
+from sqlite3 import connect
 import threading
 import json
 from crypter import AESCrypter
@@ -62,7 +63,7 @@ def receive():
 
         # user_pass_json var stores the username and password received from client as json
         user_pass_json = clientconn.recv(1024).decode()
-        print (user_pass_json)
+        #print (user_pass_json)
         user_pass_json = json.loads(user_pass_json)
 
         username = user_pass_json[0]
@@ -71,7 +72,11 @@ def receive():
         # username = clientconn.recv(1024).decode()
         # password = "banana"
 
-
+        # Check if user is already in server, by checking username/client ip list
+        if (ifuserexists(username)):
+            clientconn.send("Duplicate".encode())
+            clientconn.close()
+            continue
         # Notes argument taken in to IP
 
         # Check for ban database
@@ -141,6 +146,11 @@ def broadcast_disconnected(messsage, client):
         x.send(messsage)
 
 # Need additional non core administrative functions or similiar
+def ifuserexists(username):
+    if username in username_list:
+        return True
+    else:
+        False
 
 # Ready to receieve connection 
 print ("Server open for connection")
