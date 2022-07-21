@@ -106,6 +106,13 @@ class Client:
                     self.gui_done = True
                     self.end()
                     thread_stopped = True
+                    
+                elif data == "Duplicate":
+                    print("User is already logged in")
+                    self.clientsocket.close()
+                    self.gui_done = True
+                    self.end()
+                    thread_stopped = True
 
                 # elif data == "IV":
                 #     send_iv = b64decode(clientsocket.recv(24).decode())
