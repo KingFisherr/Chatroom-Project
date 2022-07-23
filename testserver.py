@@ -1,7 +1,7 @@
 import socket
-from sqlite3 import connect
 import threading
 import json
+import re
 from crypter import AESCrypter
 from dbmodels import database
 
@@ -26,6 +26,9 @@ clients = []
 # List of usernames of connected clients
 username_list = []
 
+# List of admins
+admins = []
+
 # Functions handles messages sent to server by clients
 def handler(client):
 
@@ -34,8 +37,13 @@ def handler(client):
             # Get message from client
             message = client.recv(1024)
 
+            #search for command
+            if re.search (r":\s/.*",str(message)):
+                commands(message, client)
+
             # Broadcast message to all clients
-            broadcast(message, client)
+            else:
+                broadcast(message, client)
 
             # Implement function or add on to this function for file transfer functionality
             
@@ -151,6 +159,147 @@ def ifuserexists(username):
         return True
     else:
         False
+# to access the username list and search for name for ip
+def transverse(names):
+    # transverse the user list one by one
+    for num in range(len(username_list)):
+        #if they found the user. then return the ip address according to the client list.
+        if str(username_list[num]) == names:
+            return clients[num]
+    #if we can't find anything we return -1
+    return -1
+
+# use user ip address to find the username
+# this is similar function to the transverse function. We use ip address to find the username this time
+def namelookup(ip_address):
+    for g in range(len(clients)):
+        if clients[g] == ip_address:
+            return username_list[g]
+    #if we can't find anything we return -1
+    return -1
+
+#check if user is admin 
+def admincheck(usernamee):
+    #check through the admin list to see if a user is inside the admin list
+    for good in admins:
+        # if we found the user then return true
+        if good == usernamee:
+            return True
+    #if not return false
+    return False
+
+#add user into admins
+def adminadd(usernamess):
+    admins.append(usernamess)
+
+#kick function
+def kick(mess,client1):
+    # if they found kick inside the message
+    if re.search (r"kick\s.+",str(mess)):
+        #extract the message from the text
+        target = re.findall(r"kick\s.+",str(mess))
+        target[0] = target[0].replace("kick ","")
+        target[0] = target[0].replace("'","")
+        target[0] = target[0].replace("n","")
+        target[0] = target[0].replace("\\","")
+        print(mess)
+        print(target[0])
+        print(transverse(target[0]))
+        #if they found a client ip address with transverse function
+        if str(transverse(target[0])) != "-1":
+            found = transverse(target[0])
+            # then we disconnect them
+            found.close()
+        #if the function can't find a user, then there exist no user in the database
+        else:
+            client1.send("User doesn't exist please double check\n".encode())
+    #if we didnt have a "/kick user" in the format then we will return the message.
+    else:
+        client1.send("Please check if you have the right format for the command\n".encode())
+
+# current number of people inside the chat room
+def chat_member(client1):
+    #send the list of username to the user
+    final = str(username_list)
+    client1.send(final.encode())
+
+# help function, to send out the commands
+def helps(client1,client_name):
+    #if they found client name under the admin list
+    if admincheck(client_name):
+        client1.send("Those are available commands: \n/chatmember\n/help\n/kick\n/ban\n/disconnect\n".encode())
+    # if not then return regular user list
+    else:
+        client1.send("Those are available commands: \n/chatmember\n/help\n/disconnect\n".encode())
+
+
+#ban function, to ban a user from branch
+def bans(mess,client1):
+    #if it picks up subject
+    if re.search (r"ban\s.+",str(mess)):
+        #extract the subject from the message
+        target = re.findall(r"ban\s.+",str(mess))
+        target[0] = target[0].replace("ban ","")
+        target[0] = target[0].replace("'","")
+        target[0] = target[0].replace("n","")
+        target[0] = target[0].replace("\\","")
+        # if subject is found in the user list
+        print(mess)
+        print(target[0])
+        print(transverse(target[0]))
+        if str(transverse(target[0])) != "-1":
+            found = transverse(target[0])
+            #ban it and disconnect it
+            db.storebaninfo(target[0],found)
+            found.close()
+        # else return a message if didnt find the subject in the database
+        else:
+            client1.send("User doesn't exist please double check\n".encode())
+    # if didnt find the subjest in the text
+    else:
+        client1.send("Please check if you have the right format for the command\n".encode())
+
+
+#admin function,make a user to become admin
+def New_admin(client1,name_client):
+    client1.send("Please enter the code you get from the Staff\n".encode())
+    #receive code from the user
+    codes = client1.recv(1024).decode()
+    #extract the code from the message
+    txts = re.findall(r"\s.+",str(codes))
+    txts[0] = txts[0].replace(" ","")
+    txts[0] = txts[0].replace("'","")
+    #if password matches, then add user into admin list
+    if txts[0] == "Passcodes": #you can change the password here
+        adminadd(name_client)
+        client1.send("You are now an admin\n".encode())
+    # send a message if the passcode is wrong
+    else:
+        client1.send("Wrong passcode, try again\n".encode())
+
+
+#we add commands here
+def commands(message1, client):
+    name_of_client = namelookup(client)
+
+    if "/chatmember" in str(message1):
+        chat_member(client)
+    elif "/disconnect" in str(message1):
+        client.close()
+    elif "/help" in str(message1):
+        helps(client,name_of_client)
+    elif "/kick" in str(message1) and admincheck(name_of_client):
+        kick(message1,client)
+    elif "/ban" in str(message1) and admincheck(name_of_client):
+        bans(message1,client)
+    elif "/admin" in str(message1):
+        New_admin(client,name_of_client)
+
+
+
+        
+    else:
+        client.send("Command Not Found, Use /help to Check for Command\n".encode())
 
 # Ready to receieve connection 
 print ("Server open for connection")
