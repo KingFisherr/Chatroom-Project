@@ -124,7 +124,6 @@ def receive():
             db.storeuserinfo(username, password)
 
         
-
         # Update client list and username list with new client
         clients.append (clientconn)
         username_list.append(username)
@@ -132,10 +131,10 @@ def receive():
         print(f"{username} is joining the server")
         
         # Call broadcast func to send a message to all clients
-        broadcast(f"{username} has joined the server\n".encode(), clientconn)
+        broadcast_disconnected(f"{username} has joined the server\n".encode(), clientconn)
 
         # Let client know they are now connected to the chat server
-        # clientconn.send("You are now connected to the live chat server".encode())
+        clientconn.send("You are now connected to the live chat server\n".encode())
 
         # Handle multiple clients
         handlerthread = threading.Thread(target=handler, args=(clientconn,))
@@ -159,6 +158,7 @@ def ifuserexists(username):
         return True
     else:
         False
+
 # to access the username list and search for name for ip
 def transverse(names):
     # transverse the user list one by one
@@ -208,6 +208,8 @@ def kick(mess,client1):
         #if they found a client ip address with transverse function
         if str(transverse(target[0])) != "-1":
             found = transverse(target[0])
+            #close the GUI
+            found.send("Exit".encode())
             # then we disconnect them
             found.close()
         #if the function can't find a user, then there exist no user in the database
@@ -251,6 +253,9 @@ def bans(mess,client1):
             found = transverse(target[0])
             #ban it and disconnect it
             db.storebaninfo(target[0],found)
+            #close the GUI
+            found.send("Exit".encode())
+            # close client
             found.close()
         # else return a message if didnt find the subject in the database
         else:
@@ -277,7 +282,28 @@ def New_admin(client1,name_client):
     else:
         client1.send("Wrong passcode, try again\n".encode())
 
+# We need function that starts image sending process
+# We have client 1, name of file, buffer of file, and client 2
+# We send "sendimage" signal to client 1
+    # Client 1 sends file data
+    # We save it to a var in server
+# We send recvimage signal to clien 2
+    # Server sends file data to client
+    # Client 2 saves in file
+    # client1.send("SendImage".encode())
+    # file = open('gotit.jpg', 'wb')
+    # image_data = client1.recv(2048)
+    # while image_data:
+    #     file.write(image_data)
+    #     image_data = client1.recv(2048)
+    #     # if "Done" in image_data:
+    #     #     break
+    # print ("We got the whole image")
+    # file.close()     
 
+    # We have issue where after sending image to server, we cannot send messages     
+    #### Currently we get stuck receivbeing the image even after client is done sending
+    
 #we add commands here
 def commands(message1, client):
     name_of_client = namelookup(client)
