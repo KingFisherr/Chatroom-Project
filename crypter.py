@@ -43,6 +43,10 @@ class AESCrypter:
         
     def initialized(self):
         return self.cipher_send is not None
+        
+    def reset(self):
+        self.cipher_send = None
+        self.cipher_recv = None
 
 #this code is just to test the above class
 if __name__ == '__main__':
