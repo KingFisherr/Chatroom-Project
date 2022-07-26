@@ -85,7 +85,7 @@ class Client:
         while self.gui_running:
             try:
                 # Get data from server
-                data = self.clientsocket.recv(1024).decode()
+                data = self.clientsocket.recv(2048).decode()
 
                 print("RAW DATA {}".format(data))
                 if data == "Username":
@@ -113,6 +113,34 @@ class Client:
                     self.gui_done = True
                     self.end()
                     thread_stopped = True
+
+                #exit Gui if receive exit
+                elif data == "Exit":
+                    self.clientsocket.close()
+                    self.gui_done = True
+                    self.end()
+                    thread_stopped = True
+                    
+                elif data == "SendImage":
+                    # open image (somehow need to get file name)
+                    file = open('animage.jpg', 'rb')
+                    image_data = file.read(2048)
+                    while image_data:
+                        self.clientsocket.send(image_data)
+                        image_data = file.read(2048)
+                    #self.clientsocket.send("Done".encode())
+                    print ("Done sending files")
+                    file.close()
+
+                elif data == "RecvImage":
+                    # open file to read image into
+                    file = open('gotit.jpg', 'wb')
+                    image_data = self.clientsocket.recv(2048)
+                    while image_data:
+                        file.write(image_data)
+                        image_data = self.clientsocket.recv(2048)
+                    file.close()                    
+                
 
                 # elif data == "IV":
                 #     send_iv = b64decode(clientsocket.recv(24).decode())
