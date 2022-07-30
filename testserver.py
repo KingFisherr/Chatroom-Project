@@ -11,7 +11,7 @@ db = database()
 
 # Establish server host and port via socket object
 host = "127.0.0.1"
-port = 1338
+port = 1400
 
 server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -222,8 +222,22 @@ def kick(mess,client1):
 # current number of people inside the chat room
 def chat_member(client1):
     #send the list of username to the user
-    final = str(username_list)
-    client1.send(final.encode())
+    #final = str(username_list)
+    #client1.send(final.encode())
+    client1.send("SendImage".encode())
+    remaining = 206993 # Get from client
+    with open('gotit.jpg', 'wb') as file:
+        #image_data = client1.recv(2048)
+        while remaining:
+            image_data = client1.recv(min(4096, remaining))
+            remaining -= len(image_data)
+            #file.write(image_data)
+            #if not image_data:
+                #file.close()
+                #break
+            file.write(image_data)
+        file.close()
+    print ("We got the whole image")
 
 # help function, to send out the commands
 def helps(client1,client_name):
@@ -311,7 +325,9 @@ def commands(message1, client):
     if "/chatmember" in str(message1):
         chat_member(client)
     elif "/disconnect" in str(message1):
+        client.send("Exit".encode())
         client.close()
+        # We need to make sure client is deleted off our lists
     elif "/help" in str(message1):
         helps(client,name_of_client)
     elif "/kick" in str(message1) and admincheck(name_of_client):
@@ -321,9 +337,6 @@ def commands(message1, client):
     elif "/admin" in str(message1):
         New_admin(client,name_of_client)
 
-
-
-        
     else:
         client.send("Command Not Found, Use /help to Check for Command\n".encode())
 
