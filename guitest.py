@@ -3,13 +3,16 @@ import socket
 import threading
 #from crypter import AESCrypter
 #from base64 import b64encode, b64decode
-from tkinter import *
-import tkinter.scrolledtext
+import tkinter
+#from tkinter import *
+from tkinter import scrolledtext
 from tkinter import simpledialog
+import time
+import os
 
 
 HOST = "127.0.0.1"
-PORT = 1338
+PORT = 1400
 
 class Client:
     def __init__(self, host, port):
@@ -41,6 +44,7 @@ class Client:
 
 
         gui_thread.start()
+        time.sleep(1)
         thread_recieve.start()
         #thread_chat.start()
 
@@ -122,15 +126,30 @@ class Client:
                     thread_stopped = True
                     
                 elif data == "SendImage":
-                    # open image (somehow need to get file name)
-                    file = open('animage.jpg', 'rb')
-                    image_data = file.read(2048)
-                    while image_data:
-                        self.clientsocket.send(image_data)
-                        image_data = file.read(2048)
-                    #self.clientsocket.send("Done".encode())
-                    print ("Done sending files")
-                    file.close()
+                    # # open image (somehow need to get file name)
+                    # file = open('animage.jpg', 'rb')
+                    # image_data = file.read(2048)
+                    # while image_data:
+                    #     self.clientsocket.send(image_data)
+                    #     image_data = file.read(2048)
+                    # #self.clientsocket.send("Done".encode())
+                    # print ("Done sending files")
+                    # file.close()
+                    file = open ('animage.jpg', 'rb')
+                    #file_size = 0
+                    file.seek(0, os.SEEK_END)
+                    print("Size of file is :", file.tell(), "bytes")
+                    file.seek(0,0)
+                    while True:
+                        image_data = file.read(4096)
+                        while (image_data):
+                            #file_size += len(image_data)
+                            self.clientsocket.send(image_data)
+                            image_data = file.read(4096)
+                        if not image_data:
+                            file.close()
+                            #print (f"Done sending file, and total size of file = {file_size}")
+                            break
 
                 elif data == "RecvImage":
                     # open file to read image into
@@ -165,7 +184,10 @@ class Client:
                     # else:
                     #     print("received message before crpter initialization : {}".format(data))
             
-            except:
+            except Exception as ex:
+                template = "An exception of type {0} occurred. Arguments:\n{1!r}"
+                message = template.format(type(ex).__name__, ex.args)
+                print (message)
                 print ("Error connecting to server")
                 self.clientsocket.close()
                 break
