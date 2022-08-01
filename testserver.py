@@ -222,22 +222,8 @@ def kick(mess,client1):
 # current number of people inside the chat room
 def chat_member(client1):
     #send the list of username to the user
-    #final = str(username_list)
-    #client1.send(final.encode())
-    client1.send("SendImage".encode())
-    remaining = 206993 # Get from client
-    with open('gotit.jpg', 'wb') as file:
-        #image_data = client1.recv(2048)
-        while remaining:
-            image_data = client1.recv(min(4096, remaining))
-            remaining -= len(image_data)
-            #file.write(image_data)
-            #if not image_data:
-                #file.close()
-                #break
-            file.write(image_data)
-        file.close()
-    print ("We got the whole image")
+    final = str(username_list)
+    client1.send(final.encode())
 
 # help function, to send out the commands
 def helps(client1,client_name):
@@ -296,27 +282,21 @@ def New_admin(client1,name_client):
     else:
         client1.send("Wrong passcode, try again\n".encode())
 
-# We need function that starts image sending process
-# We have client 1, name of file, buffer of file, and client 2
-# We send "sendimage" signal to client 1
-    # Client 1 sends file data
-    # We save it to a var in server
-# We send recvimage signal to clien 2
-    # Server sends file data to client
-    # Client 2 saves in file
-    # client1.send("SendImage".encode())
-    # file = open('gotit.jpg', 'wb')
-    # image_data = client1.recv(2048)
-    # while image_data:
-    #     file.write(image_data)
-    #     image_data = client1.recv(2048)
-    #     # if "Done" in image_data:
-    #     #     break
-    # print ("We got the whole image")
-    # file.close()     
-
-    # We have issue where after sending image to server, we cannot send messages     
-    #### Currently we get stuck receivbeing the image even after client is done sending
+# Function to send files to server
+def sendfile(client1):
+    client1.send("SendImage".encode())
+    # We need to send name of file to client client1.send("Imagename.encode")
+    remaining = client1.recv(1024).decode()
+    remaining = int(remaining)
+    print(remaining)
+    #remaining = 206975 #size of file
+    with open('gotit.jpg','wb') as file:
+        while remaining:
+            image_data = client1.recv(min(4096,remaining))
+            remaining -= len(image_data)
+            file.write(image_data)
+        file.close()
+        print("We got the whole image")   
     
 #we add commands here
 def commands(message1, client):
@@ -336,7 +316,8 @@ def commands(message1, client):
         bans(message1,client)
     elif "/admin" in str(message1):
         New_admin(client,name_of_client)
-
+    elif "/sendfile" in str(message1):
+        sendfile(client)
     else:
         client.send("Command Not Found, Use /help to Check for Command\n".encode())
 

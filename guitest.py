@@ -126,29 +126,20 @@ class Client:
                     thread_stopped = True
                     
                 elif data == "SendImage":
-                    # # open image (somehow need to get file name)
-                    # file = open('animage.jpg', 'rb')
-                    # image_data = file.read(2048)
-                    # while image_data:
-                    #     self.clientsocket.send(image_data)
-                    #     image_data = file.read(2048)
-                    # #self.clientsocket.send("Done".encode())
-                    # print ("Done sending files")
-                    # file.close()
-                    file = open ('animage.jpg', 'rb')
-                    #file_size = 0
+                    # open image (somehow need to get file name)
+                    file = open('animage.jpg', 'rb')
                     file.seek(0, os.SEEK_END)
-                    print("Size of file is :", file.tell(), "bytes")
+                    file_size = file.tell()
+                    self.clientsocket.send(str(file_size).encode())
+                    print("Size of file is :", file.tell(),"bytes")
                     file.seek(0,0)
                     while True:
                         image_data = file.read(4096)
                         while (image_data):
-                            #file_size += len(image_data)
                             self.clientsocket.send(image_data)
                             image_data = file.read(4096)
                         if not image_data:
                             file.close()
-                            #print (f"Done sending file, and total size of file = {file_size}")
                             break
 
                 elif data == "RecvImage":
@@ -197,6 +188,7 @@ class Client:
         self.clientsocket.send(message.encode())
         self.message_box.delete('1.0', 'end')          
 
+        # If we detect user is sending a file we can update a global var with file name
 
     # Stop GUI and close client socket
     def end(self):
