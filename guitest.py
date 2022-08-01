@@ -1,14 +1,12 @@
 import json
 import socket
 import time
-
 import stdiomask
 import getpass
 import threading
 from crypter import AESCrypter
 from base64 import b64encode, b64decode
 import tkinter
-#from tkinter import *
 from tkinter import scrolledtext
 from tkinter import simpledialog
 import time
@@ -141,33 +139,20 @@ class Client:
                     thread_stopped = True
 
                 elif data == "SendImage":
-                    # # open image (somehow need to get file name)
-                    # file = open('animage.jpg', 'rb')
-                    # image_data = file.read(2048)
-                    # while image_data:
-                    #     self.clientsocket.send(image_data)
-                    #     image_data = file.read(2048)
-                    # #self.clientsocket.send("Done".encode())
-                    # print ("Done sending files")
-                    # file.close()
+                    # open image (somehow need to get file name)
                     file = open('animage.jpg', 'rb')
-                    # file_size = 0
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()
-                    print("Size of file is :", file_size, "bytes")
-                    file.seek(0, 0)
-
-                    # self.clientsocket.send("")
-
+                    self.clientsocket.send(str(file_size).encode())
+                    print("Size of file is :", file.tell(),"bytes")
+                    file.seek(0,0)
                     while True:
                         image_data = file.read(4096)
-                        while image_data:
-                            # file_size += len(image_data)
+                        while (image_data):
                             self.clientsocket.send(image_data)
                             image_data = file.read(4096)
                         if not image_data:
                             file.close()
-                            # print (f"Done sending file, and total size of file = {file_size}")
                             break
 
                 elif data == "RecvImage":
@@ -207,11 +192,14 @@ class Client:
                 self.clientsocket.close()
                 break
 
+
     def chat(self, _event=None):
         message = f"{self.username}: {self.message_box.get('1.0', 'end')}"
         emsg = self.crypter.encrypt_string(message)
         self.clientsocket.send(emsg)
         self.message_box.delete('1.0', 'end')
+        # If we detect user is sending a file we can update a global var with file name
+
 
     # Stop GUI and close client socket
     def end(self):
