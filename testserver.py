@@ -11,6 +11,7 @@ from Crypto.Random import get_random_bytes
 
 # Create database object from dbmodels
 db = database()
+#db.deleteRecord()
 # Create encryption/decryption object from cypter 
 
 # Establish server host and port via socket object
@@ -50,9 +51,7 @@ def receive():
         user_pass_json = clientconn.recv(1024).decode()
         # print (user_pass_json)
         user_pass_json = json.loads(user_pass_json)
-
-        print(user_pass_json)
-        print("brehhh")
+        #print(user_pass_json)
 
         username = user_pass_json[0]
         password = user_pass_json[1]
@@ -65,8 +64,7 @@ def receive():
             clientconn.send("Duplicate".encode())
             clientconn.close()
             continue
-        # Notes argument taken in to IP
-        print("breh2")
+        # Notes argument taken in to IPs
         # Check for ban database
         db.checkfordb('ban_database.sqlite')
         # Check if client is banned
@@ -124,12 +122,12 @@ def receive():
         print(f"{username} is joining the server")
 
         # Call broadcast func to send a message to all clients
-        broadcast(f"{username} has joined the server\n".encode(), clientconn)
+        broadcast(f"{username} has joined the server\n", clientconn)
 
         # Let client know they are now connected to the chat server
         # clientconn.send("You are now connected to the live chat server".encode())
 
-        cstr = crypter.encrypt_string("You are now connected to the live chat server")
+        cstr = crypter.encrypt_string("You are now connected to the live chat server\n")
         clientconn.send(cstr)
 
         # Handle multiple clients
@@ -159,7 +157,7 @@ def handler(client):
             # print("RECEIVED RAW {}".format(message))
             dmsg = crypter.decrypt_string(message)
 
-            print("received {}".format(dmsg))
+            print("received {}".format(dmsg.decode()))
 
             # Broadcast message to all clients
             broadcast(dmsg.decode(), client)

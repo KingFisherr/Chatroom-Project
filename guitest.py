@@ -1,18 +1,16 @@
+import os
+import time
 import json
 import socket
 import time
-
-import stdiomask
-import getpass
 import threading
-from crypter import AESCrypter
-from base64 import b64encode, b64decode
 import tkinter
-#from tkinter import *
+from tkinter import ttk
 from tkinter import scrolledtext
 from tkinter import simpledialog
-import time
-import os
+from crypter import AESCrypter
+from base64 import b64encode, b64decode
+#from tkinter import *
 
 HOST = "127.0.0.1"
 PORT = 1400
@@ -40,7 +38,7 @@ class Client:
 
         # Create login elements
         self.username = simpledialog.askstring("Username", "Please enter nickname: ", parent=msgbox)
-        self.password = simpledialog.askstring("Password", "Enter password", parent=msgbox)
+        self.password = simpledialog.askstring("Password", "Enter password",show="*", parent=msgbox)
 
         # Store username and password in json var
         self.user_pass_json = (self.username, self.password)
@@ -67,9 +65,8 @@ class Client:
     # Needs to look nicer
     # Button for sending file
     def gui_loop(self):
-        print("enters gui loop")
         self.win = tkinter.Tk()
-        self.win.configure(bg="lightgray")
+        self.win.configure(bg="blue")
 
         self.chat_label = tkinter.Label(self.win, text="Chat:", bg="lightgray")
         self.chat_label.config(font=("Calibri,12"))
@@ -86,9 +83,11 @@ class Client:
         self.message_box = tkinter.Text(self.win, height=3)
         self.message_box.pack(padx=20, pady=5)
 
-        self.send_button = tkinter.Button(self.win, text="Send", command=self.chat)
+        self.send_button = tkinter.Button(self.win, text="Send", padx=20, pady=5, fg = "red", command=self.chat)
+        #self.send_button = tkinter.Button(self.win, padx=20, pady=5, fg="red", bg="green")
         self.send_button.config(font=("Calibri,12"))
-        self.send_button.pack(padx=20, pady=5)
+        self.send_button.pack()
+        self.win.bind('<Return>',lambda event:self.chat())
 
         self.gui_done = True
 
@@ -97,7 +96,6 @@ class Client:
 
         # Binds return button to func
         # self.win.bind('<Return>', self.chat)
-        print("finishes gui binding stuff")
         self.win.mainloop()
 
     def receive(self):
