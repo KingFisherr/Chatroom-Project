@@ -158,7 +158,7 @@ def handler(client):
             # print("RECEIVED RAW {}".format(message))
             dmsg = crypter.decrypt_string(message)
             
-            print("received {}".format(dmsg))
+            print("received {}".format(dmsg.decode()))
             
             # Broadcast message to all clients
             broadcast(dmsg.decode(), client)
