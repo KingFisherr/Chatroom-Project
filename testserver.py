@@ -124,7 +124,7 @@ def receive():
         print(f"{username} is joining the server")
 
         # Call broadcast func to send a message to all clients
-        broadcast(f"{username} has joined the server\n".encode(), clientconn)
+        broadcast(f"{username} has joined the server", clientconn)
 
         # Let client know they are now connected to the chat server
         # clientconn.send("You are now connected to the live chat server".encode())
