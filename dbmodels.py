@@ -7,7 +7,7 @@ import bcrypt
 
 class database:
     
-    def deleteRecord(self, name):
+    def deleteRecord(self):
         conn = sqlite3.connect('user_database.sqlite') 
         c = conn.cursor()
         
