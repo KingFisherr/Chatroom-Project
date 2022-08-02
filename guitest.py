@@ -1,7 +1,7 @@
 import json
 import socket
 import time
-import stdiomask
+#import stdiomask
 import getpass
 import threading
 from crypter import AESCrypter

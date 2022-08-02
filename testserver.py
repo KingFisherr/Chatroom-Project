@@ -111,10 +111,11 @@ def receive():
                 continue
         else:
             print("stored user info")
-            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            # user cannot enter hashed password so it will not match database
+            #hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
             # checking if DB exists before trying to store
-            db.checkfordb('user_database.sqlite')
-            db.storeuserinfo(username, hashed)
+            #db.checkfordb('user_database.sqlite')
+            db.storeuserinfo(username, password)
 
         # Update client list and username list with new client
         crypters.append(crypter)
@@ -124,12 +125,12 @@ def receive():
         print(f"{username} is joining the server")
 
         # Call broadcast func to send a message to all clients
-        broadcast(f"{username} has joined the server", clientconn)
+        broadcast(f"{username} has joined the server\n", clientconn)
 
         # Let client know they are now connected to the chat server
         # clientconn.send("You are now connected to the live chat server".encode())
 
-        cstr = crypter.encrypt_string("You are now connected to the live chat server")
+        cstr = crypter.encrypt_string("You are now connected to the live chat server\n")
         clientconn.send(cstr)
 
         # Handle multiple clients
@@ -158,11 +159,22 @@ def handler(client):
 
             # print("RECEIVED RAW {}".format(message))
             dmsg = crypter.decrypt_string(message)
-
-            print("received {}".format(dmsg.decode()))
-
+            #search for command
+            print (f"THIS IS DSMG {dmsg}")
+            if re.search (r":\s/.",str(dmsg)):
+                commands(dmsg, client)
             # Broadcast message to all clients
-            broadcast(dmsg.decode(), client)
+            # elif re.search (r"@.",str(message)):
+            #     ping(message, client)
+            #     broadcast(message, client)
+
+
+            #print("received {}".format(dmsg.decode()))
+
+            else:
+                # Broadcast message to all clients
+                print("received {}".format(dmsg.decode()))
+                broadcast(dmsg.decode(), client)
 
             # Implement function or add on to this function for file transfer functionality
 
@@ -187,8 +199,8 @@ def broadcast(message, client):
     print(f"broadcasting {message}")
     for x in clients:
         # skip the sender
-        if x == client:
-            continue
+        # if x == client:
+        #     continue
 
         try:
             crypter = client_to_crypter(x)
@@ -294,10 +306,18 @@ def chat_member(client1):
 def helps(client1, client_name):
     # if they found client name under the admin list
     if admincheck(client_name):
-        client1.send("Those are available commands: \n/chatmember\n/help\n/kick\n/ban\n/disconnect\n".encode())
+        crypter = client_to_crypter(client1)
+        help_message = "Those are available commands: \n/chatmember\n/help\n/kick\n/ban\n/disconnect\n"
+        help_message = crypter.encrypt_string(help_message)
+        client1.send(help_message.encode())        
+        #client1.send("Those are available commands: \n/chatmember\n/help\n/kick\n/ban\n/disconnect\n".encode())
     # if not then return regular user list
     else:
-        client1.send("Those are available commands: \n/chatmember\n/help\n/disconnect\n".encode())
+        crypter = client_to_crypter(client1)
+        help_message = "Those are available commands: \n/chatmember\n/help\n/disconnect\n"
+        help_message = crypter.encrypt_string(help_message)
+        client1.send(help_message)        
+        #client1.send("Those are available commands: \n/chatmember\n/help\n/disconnect\n".encode())
 
 
 # ban function, to ban a user from branch
