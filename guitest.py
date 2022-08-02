@@ -3,17 +3,11 @@ import time
 import json
 import socket
 import time
-<<<<<<< HEAD
-=======
 import stdiomask
 import getpass
->>>>>>> ba358233bbb7047ed2b88d5b37a19c8c68c9ae78
 import threading
 import tkinter
-<<<<<<< HEAD
 from tkinter import ttk
-=======
->>>>>>> ba358233bbb7047ed2b88d5b37a19c8c68c9ae78
 from tkinter import scrolledtext
 from tkinter import simpledialog
 from crypter import AESCrypter

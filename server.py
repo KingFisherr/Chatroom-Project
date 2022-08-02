@@ -183,5 +183,6 @@ def handler(client):
 # Need additional non core administrative functions or similiar
 
 # Ready to receieve connection 
+db.getuserinfo()
 print ("Server open for connection")
 receive()
