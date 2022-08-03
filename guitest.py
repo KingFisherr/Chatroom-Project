@@ -1,16 +1,18 @@
+import os
 import json
 import socket
 import time
-#import stdiomask
 import getpass
 import threading
-from crypter import AESCrypter
-from base64 import b64encode, b64decode
 import tkinter
+#from Tkinter import 
+import tkinter as tk
 from tkinter import scrolledtext
 from tkinter import simpledialog
-import time
-import os
+from crypter import AESCrypter
+from base64 import b64encode, b64decode
+from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox
+
 
 HOST = "127.0.0.1"
 PORT = 1400
@@ -36,7 +38,7 @@ class Client:
         msgbox = tkinter.Tk()
         msgbox.withdraw()
 
-        # Create login elements
+        #Create login elements
         self.username = simpledialog.askstring("Username", "Please enter nickname: ", parent=msgbox)
         self.password = simpledialog.askstring("Password", "Enter password",show="*", parent=msgbox)
 
@@ -65,11 +67,10 @@ class Client:
     # Needs to look nicer
     # Button for sending file
     def gui_loop(self):
-        print("enters gui loop")
         self.win = tkinter.Tk()
-        self.win.configure(bg="blue")
+        self.win.configure(bg="#4682B4")
 
-        self.chat_label = tkinter.Label(self.win, text="Chat:", bg="lightgray")
+        self.chat_label = tkinter.Label(self.win, text="Chat:", fg="white", bg="#4682B4")
         self.chat_label.config(font=("Calibri,12"))
         self.chat_label.pack(padx=20, pady=5)
 
@@ -77,14 +78,14 @@ class Client:
         self.text_area.config(state='disabled')
         self.text_area.pack(padx=20, pady=5)
 
-        self.message_label = tkinter.Label(self.win, text="Message:", bg="lightgray")
+        self.message_label = tkinter.Label(self.win, text="Message:", fg="white", bg="#4682B4")
         self.message_label.config(font=("Calibri,12"))
         self.message_label.pack(padx=20, pady=5)
 
         self.message_box = tkinter.Text(self.win, height=3)
         self.message_box.pack(padx=20, pady=5)
 
-        self.send_button = tkinter.Button(self.win, text="Send", padx=20, pady=5, fg = "red", command=self.chat)
+        self.send_button = tkinter.Button(self.win, text="Send", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.chat)
         self.send_button.config(font=("Calibri,12"))
         #self.send_button.pack(padx=20, pady=5)
         self.send_button.pack()
@@ -96,8 +97,6 @@ class Client:
 
         # Binds return button to func
         self.win.bind('<Return>',lambda event:self.chat())
-        
-        print("finishes gui binding stuff")
         self.win.mainloop()
 
     def receive(self):
@@ -106,7 +105,7 @@ class Client:
                 # Get data from server
                 data = self.clientsocket.recv(2048).decode()
 
-                print("RAW DATA {}".format(data))
+                #print("RAW DATA {}".format(data))
                 if data == "Username":
                     self.clientsocket.send(self.user_pass_json.encode())
 
