@@ -5,6 +5,7 @@ import time
 import getpass
 import threading
 import tkinter
+from playsound import playsound #pip install playsound==1.2.2
 #from Tkinter import 
 import tkinter as tk
 from tkinter import scrolledtext
@@ -164,6 +165,11 @@ class Client:
                         file.write(image_data)
                         image_data = self.clientsocket.recv(2048)
                     file.close()
+                
+                # if pinged, then the computer will play sound and notify the client
+                elif data == "Pinged":
+                    sound = "ping.mp3"
+                    playsound(sound)
 
                 elif data == "IV":
                     send_iv = b64decode(self.clientsocket.recv(24).decode())
