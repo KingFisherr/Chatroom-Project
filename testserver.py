@@ -51,9 +51,6 @@ def receive():
         # print (user_pass_json)
         user_pass_json = json.loads(user_pass_json)
 
-        print(user_pass_json)
-        print("brehhh")
-
         username = user_pass_json[0]
         password = user_pass_json[1]
 
@@ -66,7 +63,6 @@ def receive():
             clientconn.close()
             continue
         # Notes argument taken in to IP
-        print("breh2")
         # Check for ban database
         db.checkfordb('ban_database.sqlite')
         # Check if client is banned
@@ -100,10 +96,11 @@ def receive():
         # Check for user database
         db.checkfordb('user_database.sqlite')
         # Check if username exists
+        print("enters check")
         if db.checkUsername(username):
             print("Username exists")
             # If username exists then verify login
-            if not db.checklogin(username, password):
+            if not db.checkloginHash(username, password):
                 print("Password does not match")
                 # We want to disconnect client so they retry password
                 clientconn.send("Wrongpass".encode())
@@ -112,10 +109,11 @@ def receive():
         else:
             print("stored user info")
             # user cannot enter hashed password so it will not match database
-            #hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            
             # checking if DB exists before trying to store
-            #db.checkfordb('user_database.sqlite')
-            db.storeuserinfo(username, password)
+            db.checkfordb('user_database.sqlite')
+            db.storeuserinfo(username, hashed.decode())
 
         # Update client list and username list with new client
         crypters.append(crypter)
