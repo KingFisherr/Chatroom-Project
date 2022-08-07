@@ -8,14 +8,19 @@ import tkinter
 #from Tkinter import 
 import tkinter as tk
 from tkinter import scrolledtext
+from tkinter import ttk
+from tkinter import filedialog
 from tkinter import simpledialog
+from tkinter import messagebox
 from crypter import AESCrypter
 from base64 import b64encode, b64decode
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox
+
 
 
 HOST = "127.0.0.1"
 PORT = 1400
+
+file_name = ""
 
 class Client:
     def __init__(self, host, port):
@@ -90,6 +95,14 @@ class Client:
         #self.send_button.pack(padx=20, pady=5)
         self.send_button.pack()
 
+        self.select_file_button = tkinter.Button(self.win, text="Open File", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.getFilePath)
+        self.select_file_button.config(font=("Calibri,12"))
+        self.select_file_button.pack()
+    
+        self.send_file_button = tkinter.Button(self.win, text="Confirm File Choice", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.onFileConfirmed)
+        self.send_file_button.config(font=("Calibri,12"))
+        self.send_file_button.pack()
+
         self.gui_done = True
 
         # When window is closed we call end function
@@ -105,7 +118,7 @@ class Client:
                 # Get data from server
                 data = self.clientsocket.recv(2048).decode()
 
-                #print("RAW DATA {}".format(data))
+                print("RAW DATA {}".format(data))
                 if data == "Username":
                     self.clientsocket.send(self.user_pass_json.encode())
 
@@ -141,7 +154,9 @@ class Client:
 
                 elif data == "SendImage":
                     # open image (somehow need to get file name)
-                    file = open('animage.jpg', 'rb')
+                    # We can use global variable to hold file name
+                    global file_name
+                    file = open(file_name, 'rb')
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()
                     self.clientsocket.send(str(file_size).encode())
@@ -197,10 +212,40 @@ class Client:
     def chat(self, _event=None):
         message = f"{self.username}: {self.message_box.get('1.0', 'end')}"
         emsg = self.crypter.encrypt_string(message)
+
+        # MAYBE WE MAKE DICT HERE
+        #data_dict = {"Message": emsg}
         self.clientsocket.send(emsg)
         self.message_box.delete('1.0', 'end')
+        #{"type":"Text", "body":"the message"}
         # If we detect user is sending a file we can update a global var with file name
 
+    def getFilePath(self):
+        global file_name 
+        file_name = filedialog.askopenfilename()
+
+    def onFileConfirmed(self):
+        global file_name
+        if file_name is None:
+            messagebox.showerror("Please select a folder first")
+        else:
+            print (file_name)
+            # DO something with file name
+
+    def fileHandler(self):
+        global file_name
+        self.message_dict = {"File": file_name}
+        self.message_dict = json.dumps(self.message_dict)
+        self.clientsocket.send(self.message_dict)
+        # Send file path as string to server
+        # {"type":"File", "body":"the message"}
+
+
+    # A function which sends file
+    # Gets path of file via input on gui button (browser)
+    # Gets size of file 
+    # Notifies server of file transfer (with file size, and file destination) ** Or maybe we update global var
+    # Receives 
 
     # Stop GUI and close client socket
     def end(self):
