@@ -14,6 +14,7 @@ from tkinter import simpledialog
 from tkinter import messagebox
 from crypter import AESCrypter
 from base64 import b64encode, b64decode
+from playsound import playsound #pip install playsound==1.2.2
 
 
 
@@ -187,6 +188,11 @@ class Client:
                     # print(recv_iv)
                     self.crypter.init_cipher(send_iv, recv_iv)
                     # print("iv has been initialized")
+
+                # if pinged, then the computer will play sound and notify the client
+                elif data == "Pinged":
+                    sound = "ping.mp3"
+                    playsound(sound)
 
                 elif data == "":
                     raise Exception("received empty string, server probably disconnected")
