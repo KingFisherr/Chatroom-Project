@@ -181,9 +181,9 @@ def handler(client):
                 broadcast_single(dmsg.decode(), client)
                 commands(dmsg, client)
             # Broadcast message to all clients
-            # elif re.search (r"@.",str(message)):
-            #     ping(message, client)
-            #     broadcast(message, client)
+            elif re.search (r"@.",str(dmsg)):
+                ping(dmsg, client)
+                broadcast(dmsg.decode(), client)
 
 
             #print("received {}".format(dmsg.decode()))
@@ -200,7 +200,7 @@ def handler(client):
             # Broadcast the user has disconnected
             index = clients.index(client)
             username = username_list[index]
-            broadcast_disconnected(f'{username} has left the chat\n', client)
+            broadcast(f'{username} has left the chat\n', client)
 
             # not thread safe, data race
             # Disconnect client from server and remove from list
@@ -300,35 +300,36 @@ def admincheck(usernamee):
 def adminadd(usernamess):
     admins.append(usernamess)
 
-# #ping function
-# def ping(message1,client1):
-#     crypter = client_to_crypter(client1)
-#     if re.search (r"@.+",str(message1)):
-#         #extract the message from the text
-#         target = re.findall(r"@.+",str(message1))
-#         target[0] = target[0].replace("'","")
-#         target[0] = target[0].replace("\\n","")
-#         # split them withg space
-#         lists = target[0].split(' ')
-#         print(message1)
-#         print(target[0])
-#         # for each word between space
-#         for i in lists:
-#             #if there's @ inside the word
-#             if "@" in i:
-#                 #extract name
-#                 i = i.replace("@","")
-#                 #see if the name is exist in chatroom
-#                 if str(transverse(i)) != "-1":
-#                     found = transverse(i)
-#                     # ping it 
-#                     found.send("Pinged".encode())
-#                     client1.send(crypter.encrypt_string("Pinged!\n"))
-#                 else:
-#                     client1.send(crypter.encrypt_string("user"))
-#     #if we didnt have a "@user" in the format then we will return the message.
-#     else:
-#         client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
+#ping function
+def ping(message1,client1):
+    crypter = client_to_crypter(client1)
+    if re.search (r"@.+",str(message1)):
+        #extract the message from the text
+        target = re.findall(r"@.+",str(message1))
+        target[0] = target[0].replace("'","")
+        target[0] = target[0].replace("\\n","")
+        # split them withg space
+        lists = target[0].split(' ')
+        print("message before ",message1)
+        print("extracted ",target[0])
+        print("this is list ",lists)
+        # for each word between space
+        for i in lists:
+            #if there's @ inside the word
+            if "@" in i:
+                #extract name
+                i = i.replace("@","")
+                #see if the name is exist in chatroom
+                if str(transverse(i)) != "-1":
+                    found = transverse(i)
+                    # ping it 
+                    found.send("Pinged".encode())
+                    client1.send(crypter.encrypt_string("Pinged!\n"))
+                else:
+                    client1.send(crypter.encrypt_string("user"))
+    #if we didnt have a "@user" in the format then we will return the message.
+    else:
+        client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
 
 # kick function
 def kick(mess, client1):
@@ -351,7 +352,7 @@ def kick(mess, client1):
             # close the GUI
             found.send("Exit".encode())
             # then we disconnect them
-            found.close()
+            #found.close()
         # if the function can't find a user, then there exist no user in the database
         else:
             client1.send(crypter.encrypt_string("User doesn't exist please double check\n"))
@@ -411,7 +412,7 @@ def bans(mess, client1):
             # close the GUI
             found.send("Exit".encode())
             # close client
-            found.close()
+            #found.close()
         # else return a message if didnt find the subject in the database
         else:
             client1.send(crypter.encrypt_string("User doesn't exist please double check\n"))
@@ -488,7 +489,7 @@ def commands(message1, client):
         chat_member(client)
     elif "/disconnect" in str(message1):
         client.send("Exit".encode())
-        client.close()
+        #client.close()
         # We need to make sure client is deleted off our lists
     elif "/help" in str(message1):
         helps(client, name_of_client)
