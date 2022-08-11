@@ -21,6 +21,7 @@ HOST = "127.0.0.1"
 PORT = 1400
 
 file_name = ""
+last_file = ""
 
 class Client:
     def __init__(self, host, port):
@@ -174,6 +175,7 @@ class Client:
                 elif data == "RecvImage":
                     # open file to read image into
                     file = open('gotit.jpg', 'wb')
+                    # GET IMAGE FROM SERVER
                     image_data = self.clientsocket.recv(2048)
                     while image_data:
                         file.write(image_data)
@@ -226,19 +228,25 @@ class Client:
 
     def onFileConfirmed(self):
         global file_name
-        if file_name is None:
+        global last_file
+        if file_name is last_file:
+            print("NO FILE")
             messagebox.showerror("Please select a folder first")
+            # Who to send tooijoijopifjdopifj
         else:
-            print (file_name)
+            last_file = file_name
+            self.fileHandler()
             # DO something with file name
 
     def fileHandler(self):
         global file_name
-        self.message_dict = {"File": file_name}
-        self.message_dict = json.dumps(self.message_dict)
-        self.clientsocket.send(self.message_dict)
+        #self.message_dict = {"File": file_name}
+        #self.message_dict = json.dumps(self.message_dict)
+        message = "SENDXX"
+        message = self.crypter.encrypt_string(message)
+        self.clientsocket.send(message)
         # Send file path as string to server
-        # {"type":"File", "body":"the message"}
+        # {"type":"File", "body":"chatroom or a client"}
 
 
     # A function which sends file

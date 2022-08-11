@@ -152,6 +152,7 @@ def handler(client):
         try:
             # Get message from client
             message = client.recv(1024)
+             # data = {"type":"File", "body":"chatroom or client"}
 
             if message == b"":
                 raise Exception("exception: received empty string")
@@ -159,10 +160,18 @@ def handler(client):
             # print("RECEIVED RAW {}".format(message))
             dmsg = crypter.decrypt_string(message)
 
+            temp = dmsg.decode()
+
+            if temp == "SENDXX":
+                #if filePermission(client) == "SERVER":
+                sendfile(client)
             # WE can use {"type":"Text", "body":"the message"} to decipher for command, reg message, or a file
+            # data = {"type":"File", "body":"path"}
+            
             #data = json.loads(dict from client)
             # If type = message
             # Elif type = file
+                # Sendfile func
             # Elif type = command
 
 
@@ -191,7 +200,7 @@ def handler(client):
             # Broadcast the user has disconnected
             index = clients.index(client)
             username = username_list[index]
-            broadcast(f'{username} has left the chat', client)
+            broadcast_disconnected(f'{username} has left the chat\n', client)
 
             # not thread safe, data race
             # Disconnect client from server and remove from list
@@ -223,11 +232,14 @@ def broadcast(message, client):
 
 
 # Function sends message only to all connected clients
-def broadcast_disconnected(messsage, client):
+def broadcast_disconnected(message, client):
     for x in clients:
         if x == client:
             continue
-        x.send(messsage)
+        else:     
+            crypter = client_to_crypter(x)
+            emsg = crypter.encrypt_string(message)
+            x.send(emsg)
 
 def broadcast_single(message, client):
     for x in clients:
@@ -328,8 +340,8 @@ def kick(mess, client1):
         target = re.findall(r"kick\s.+", str(mess))
         target[0] = target[0].replace("kick ", "")
         target[0] = target[0].replace("'", "")
-        target[0] = target[0].replace("n", "")
-        target[0] = target[0].replace("\\", "")
+        #target[0] = target[0].replace("n", "")
+        target[0] = target[0].replace("\\n", "")
         print(mess)
         print(target[0])
         print(transverse(target[0]))
@@ -430,6 +442,16 @@ def New_admin(client1, name_client):
     else:
         client1.send(crypter.encrypt_string("Wrong passcode, try again\n"))
 
+def filePermission(client1):
+    crypter = client_to_crypter(client1)
+    client1.send(crypter.encrypt_string("Do you want send file to chatroom or a client?\n"))
+    answer = client1.recv(1024).decode()
+    answer_decoded = crypter.decrypt_string(answer)
+    regexp = re.compile(r'SERVER')
+    if regexp.search(answer_decoded):
+        return "SERVER"
+    else:
+        return "CLIENT"
 
 # Function to send files to server
 # After update handler will call sendfile when it receives type file
@@ -452,6 +474,9 @@ def sendfile(client1):
         help_message = "Server has received the entire file\n"       
         help_message = crypter.encrypt_string(help_message)
         client1.send(help_message)      
+    
+    # HERE WE WANT TO USE GOTIT and send it to 1 or more clients
+        # WE want user to be able to send multiple files so gotit would have to be deleted after broadcasting.
         #print("Server has received the entire file")   
     
 #we add commands here
