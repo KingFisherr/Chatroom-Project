@@ -1,8 +1,8 @@
-from dbmodels import database
+import os
 
-db = database()
+#files = os.listdir(os.curdir)
+print (str(os.curdir+"/MyImages"))
 
-db.checkdb()
 
 
 

@@ -5,14 +5,24 @@ import time
 import getpass
 import threading
 import tkinter
-from gui import Login
+from gui import App
+import tkinter as tk
+from tkinter import scrolledtext
+from tkinter import ttk
+from tkinter import filedialog
+from tkinter import simpledialog
+from tkinter import messagebox
 from crypter import AESCrypter
 from tkinter import simpledialog
 from tkinter import scrolledtext
 from base64 import b64encode, b64decode
+from playsound import playsound #pip install playsound==1.2.2
 
 HOST = "127.0.0.1"
 PORT = 1400
+
+file_name = ""
+last_file = ""
 
 class Client:
     def __init__(self, host, port):
@@ -67,9 +77,37 @@ class Client:
     # Button for sending file
     def gui_loop(self):
         self.win = tkinter.Tk()
-        login = Login(self.win)
+        self.win.configure(bg="#4682B4")
 
+        self.chat_label = tkinter.Label(self.win, text="Chat:", fg="white", bg="#4682B4")
+        self.chat_label.config(font=("Calibri,12"))
+        self.chat_label.pack(padx=20, pady=5)
 
+        self.text_area = tkinter.scrolledtext.ScrolledText(self.win)
+        self.text_area.config(state='disabled')
+        self.text_area.pack(padx=20, pady=5)
+
+        self.message_label = tkinter.Label(self.win, text="Message:", fg="white", bg="#4682B4")
+        self.message_label.config(font=("Calibri,12"))
+        self.message_label.pack(padx=20, pady=5)
+
+        self.message_box = tkinter.Text(self.win, height=3)
+        self.message_box.pack(padx=20, pady=5)
+
+        self.send_button = tkinter.Button(self.win, text="Send", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.chat)
+        self.send_button.config(font=("Calibri,12"))
+        #self.send_button.pack(padx=20, pady=5)
+        self.send_button.pack()
+
+        self.select_file_button = tkinter.Button(self.win, text="Open File", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.getFilePath)
+        self.select_file_button.config(font=("Calibri,12"))
+        self.select_file_button.pack()
+    
+        self.send_file_button = tkinter.Button(self.win, text="Confirm File Choice", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.onFileConfirmed)
+        self.send_file_button.config(font=("Calibri,12"))
+        self.send_file_button.pack()
+
+        self.gui_done = True
         self.win.mainloop()
 
     def receive(self):
@@ -78,7 +116,7 @@ class Client:
                 # Get data from server
                 data = self.clientsocket.recv(2048).decode()
 
-                #print("RAW DATA {}".format(data))
+                print("RAW DATA {}".format(data))
                 if data == "Username":
                     self.clientsocket.send(self.user_pass_json.encode())
 
@@ -114,7 +152,9 @@ class Client:
 
                 elif data == "SendImage":
                     # open image (somehow need to get file name)
-                    file = open('animage.jpg', 'rb')
+                    # We can use global variable to hold file name
+                    global file_name
+                    file = open(file_name, 'rb')
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()
                     self.clientsocket.send(str(file_size).encode())
@@ -132,6 +172,7 @@ class Client:
                 elif data == "RecvImage":
                     # open file to read image into
                     file = open('gotit.jpg', 'wb')
+                    # GET IMAGE FROM SERVER
                     image_data = self.clientsocket.recv(2048)
                     while image_data:
                         file.write(image_data)
@@ -145,6 +186,11 @@ class Client:
                     # print(recv_iv)
                     self.crypter.init_cipher(send_iv, recv_iv)
                     # print("iv has been initialized")
+
+                # if pinged, then the computer will play sound and notify the client
+                elif data == "Pinged":
+                    sound = "ping.mp3"
+                    playsound(sound)
 
                 elif data == "":
                     raise Exception("received empty string, server probably disconnected")
@@ -170,10 +216,46 @@ class Client:
     def chat(self, _event=None):
         message = f"{self.username}: {self.message_box.get('1.0', 'end')}"
         emsg = self.crypter.encrypt_string(message)
+
+        # MAYBE WE MAKE DICT HERE
+        #data_dict = {"Message": emsg}
         self.clientsocket.send(emsg)
         self.message_box.delete('1.0', 'end')
+        #{"type":"Text", "body":"the message"}
         # If we detect user is sending a file we can update a global var with file name
 
+    def getFilePath(self):
+        global file_name 
+        file_name = filedialog.askopenfilename()
+
+    def onFileConfirmed(self):
+        global file_name
+        global last_file
+        if file_name is last_file:
+            print("NO FILE")
+            messagebox.showerror("Please select a folder first")
+            # Who to send tooijoijopifjdopifj
+        else:
+            last_file = file_name
+            self.fileHandler()
+            # DO something with file name
+
+    def fileHandler(self):
+        global file_name
+        #self.message_dict = {"File": file_name}
+        #self.message_dict = json.dumps(self.message_dict)
+        message = "SENDXX"
+        message = self.crypter.encrypt_string(message)
+        self.clientsocket.send(message)
+        # Send file path as string to server
+        # {"type":"File", "body":"chatroom or a client"}
+
+
+    # A function which sends file
+    # Gets path of file via input on gui button (browser)
+    # Gets size of file 
+    # Notifies server of file transfer (with file size, and file destination) ** Or maybe we update global var
+    # Receives 
 
     # Stop GUI and close client socket
     def end(self):

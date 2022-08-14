@@ -1,3 +1,4 @@
+from pydoc import cli
 import re
 import json
 import time
@@ -100,7 +101,7 @@ def receive():
         if db.checkUsername(username):
             print("Username exists")
             # If username exists then verify login
-            if not db.checkloginHash(username, password):
+            if not db.checklogin(username, password):
                 print("Password does not match")
                 # We want to disconnect client so they retry password
                 clientconn.send("Wrongpass".encode())
@@ -109,12 +110,12 @@ def receive():
         else:
             print("stored user info")
             # user cannot enter hashed password so it will not match database
-            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            #hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
             
             # checking if DB exists before trying to store
-            db.checkfordb('user_database.sqlite')
-            db.storeuserinfo(username, hashed.decode())
-
+            #db.checkfordb('user_database.sqlite')
+            #db.storeuserinfo(username, hashed.decode())
+            db.storeuserinfo(username, password)
         # Update client list and username list with new client
         crypters.append(crypter)
         clients.append(clientconn)
@@ -151,20 +152,38 @@ def handler(client):
         try:
             # Get message from client
             message = client.recv(1024)
+             # data = {"type":"File", "body":"chatroom or client"}
 
             if message == b"":
                 raise Exception("exception: received empty string")
 
             # print("RECEIVED RAW {}".format(message))
             dmsg = crypter.decrypt_string(message)
+
+            temp = dmsg.decode()
+
+            if temp == "SENDXX":
+                #if filePermission(client) == "SERVER":
+                sendfile(client)
+            # WE can use {"type":"Text", "body":"the message"} to decipher for command, reg message, or a file
+            # data = {"type":"File", "body":"path"}
+            
+            #data = json.loads(dict from client)
+            # If type = message
+            # Elif type = file
+                # Sendfile func
+            # Elif type = command
+
+
             #search for command
             print (f"THIS IS DSMG {dmsg}")
             if re.search (r":\s/.",str(dmsg)):
+                broadcast_single(dmsg.decode(), client)
                 commands(dmsg, client)
             # Broadcast message to all clients
-            # elif re.search (r"@.",str(message)):
-            #     ping(message, client)
-            #     broadcast(message, client)
+            elif re.search (r"@.",str(dmsg)):
+                ping(dmsg, client)
+                broadcast(dmsg.decode(), client)
 
 
             #print("received {}".format(dmsg.decode()))
@@ -181,7 +200,7 @@ def handler(client):
             # Broadcast the user has disconnected
             index = clients.index(client)
             username = username_list[index]
-            broadcast(f'{username} has left the chat', client)
+            broadcast(f'{username} has left the chat\n', client)
 
             # not thread safe, data race
             # Disconnect client from server and remove from list
@@ -205,7 +224,7 @@ def broadcast(message, client):
             # encrypt the message to send
             emsg = crypter.encrypt_string(message)
             # ( ( ( hacky sleep cuz no size header ) ) )
-            time.sleep(0.5)
+            #time.sleep(0.5)
             # send the message to the target clientss
             x.send(emsg)
         except Exception as ex:
@@ -213,11 +232,28 @@ def broadcast(message, client):
 
 
 # Function sends message only to all connected clients
-def broadcast_disconnected(messsage, client):
+def broadcast_disconnected(message, client):
     for x in clients:
         if x == client:
             continue
-        x.send(messsage)
+        else:     
+            crypter = client_to_crypter(x)
+            emsg = crypter.encrypt_string(message)
+            x.send(emsg)
+
+def broadcast_single(message, client):
+    for x in clients:
+        if x == client:
+            try:
+                crypter = client_to_crypter(x)
+                # encrypt the message to send
+                emsg = crypter.encrypt_string(message)
+                # ( ( ( hacky sleep cuz no size header ) ) )
+                #time.sleep(0.5)
+                # send the message to the target clientss
+                x.send(emsg)
+            except Exception as ex:
+                print(ex)
 
 
 # Need additional non core administrative functions or similiar
@@ -264,17 +300,49 @@ def admincheck(usernamee):
 def adminadd(usernamess):
     admins.append(usernamess)
 
+#ping function
+def ping(message1,client1):
+    crypter = client_to_crypter(client1)
+    if re.search (r"@.+",str(message1)):
+        #extract the message from the text
+        target = re.findall(r"@.+",str(message1))
+        target[0] = target[0].replace("'","")
+        target[0] = target[0].replace("\\n","")
+        # split them withg space
+        lists = target[0].split(' ')
+        print("message before ",message1)
+        print("extracted ",target[0])
+        print("this is list ",lists)
+        # for each word between space
+        for i in lists:
+            #if there's @ inside the word
+            if "@" in i:
+                #extract name
+                i = i.replace("@","")
+                #see if the name is exist in chatroom
+                if str(transverse(i)) != "-1":
+                    found = transverse(i)
+                    # ping it 
+                    found.send("Pinged".encode())
+                    client1.send(crypter.encrypt_string("Pinged!\n"))
+                else:
+                    client1.send(crypter.encrypt_string("user"))
+    #if we didnt have a "@user" in the format then we will return the message.
+    else:
+        client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
 
 # kick function
 def kick(mess, client1):
+    crypter = client_to_crypter(client1)
     # if they found kick inside the message
+    print("this is mess :",mess)
     if re.search(r"kick\s.+", str(mess)):
         # extract the message from the text
         target = re.findall(r"kick\s.+", str(mess))
         target[0] = target[0].replace("kick ", "")
         target[0] = target[0].replace("'", "")
-        target[0] = target[0].replace("n", "")
-        target[0] = target[0].replace("\\", "")
+        #target[0] = target[0].replace("n", "")
+        target[0] = target[0].replace("\\n", "")
         print(mess)
         print(target[0])
         print(transverse(target[0]))
@@ -284,20 +352,24 @@ def kick(mess, client1):
             # close the GUI
             found.send("Exit".encode())
             # then we disconnect them
-            found.close()
+            #found.close()
         # if the function can't find a user, then there exist no user in the database
         else:
-            client1.send("User doesn't exist please double check\n".encode())
+            client1.send(crypter.encrypt_string("User doesn't exist please double check\n"))
+            #client1.send("User doesn't exist please double check\n".encode())
     # if we didnt have a "/kick user" in the format then we will return the message.
     else:
-        client1.send("Please check if you have the right format for the command\n".encode())
+        client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
+        #client1.send("Please check if you have the right format for the command\n".encode())
+
 
 
 # current number of people inside the chat room
 def chat_member(client1):
+    crypter = client_to_crypter(client1)
     #send the list of username to the user
-    final = str(username_list)
-    client1.send(final.encode())
+    final = str(username_list)+"\n"
+    client1.send(crypter.encrypt_string(final))
 
 
 # help function, to send out the commands
@@ -307,7 +379,7 @@ def helps(client1, client_name):
         crypter = client_to_crypter(client1)
         help_message = "Those are available commands: \n/chatmember\n/help\n/kick\n/ban\n/disconnect\n"
         help_message = crypter.encrypt_string(help_message)
-        client1.send(help_message.encode())        
+        client1.send(help_message)        
         #client1.send("Those are available commands: \n/chatmember\n/help\n/kick\n/ban\n/disconnect\n".encode())
     # if not then return regular user list
     else:
@@ -320,6 +392,7 @@ def helps(client1, client_name):
 
 # ban function, to ban a user from branch
 def bans(mess, client1):
+    crypter = client_to_crypter(client1)
     # if it picks up subject
     if re.search(r"ban\s.+", str(mess)):
         # extract the subject from the message
@@ -339,58 +412,84 @@ def bans(mess, client1):
             # close the GUI
             found.send("Exit".encode())
             # close client
-            found.close()
+            #found.close()
         # else return a message if didnt find the subject in the database
         else:
-            client1.send("User doesn't exist please double check\n".encode())
+            client1.send(crypter.encrypt_string("User doesn't exist please double check\n"))
     # if didnt find the subjest in the text
     else:
-        client1.send("Please check if you have the right format for the command\n".encode())
+        client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
 
 
 # admin function,make a user to become admin
 def New_admin(client1, name_client):
-    client1.send("Please enter the code you get from the Staff\n".encode())
+    crypter = client_to_crypter(client1)
+    client1.send(crypter.encrypt_string("Please enter the code you get from the Staff\n"))
     # receive code from the user
     codes = client1.recv(1024).decode()
+    dcode = crypter.decrypt_string(codes)
     # extract the code from the message
-    txts = re.findall(r"\s.+", str(codes))
+    txts = re.findall(r"\s.+", str(dcode))
+    #print("codes: ",txts)
     txts[0] = txts[0].replace(" ", "")
     txts[0] = txts[0].replace("'", "")
+    txts[0] = txts[0].replace("\\n", "")
+    # print("Acodes: ",txts)
     # if password matches, then add user into admin list
     if txts[0] == "Passcodes":  # you can change the password here
         adminadd(name_client)
-        client1.send("You are now an admin\n".encode())
+        client1.send(crypter.encrypt_string("You are now an admin\n"))
     # send a message if the passcode is wrong
     else:
-        client1.send("Wrong passcode, try again\n".encode())
+        client1.send(crypter.encrypt_string("Wrong passcode, try again\n"))
 
+def filePermission(client1):
+    crypter = client_to_crypter(client1)
+    client1.send(crypter.encrypt_string("Do you want send file to chatroom or a client?\n"))
+    answer = client1.recv(1024).decode()
+    answer_decoded = crypter.decrypt_string(answer)
+    regexp = re.compile(r'SERVER')
+    if regexp.search(answer_decoded):
+        return "SERVER"
+    else:
+        return "CLIENT"
 
 # Function to send files to server
+# After update handler will call sendfile when it receives type file
 def sendfile(client1):
+    # We need to tell client we are ready to recieve a file 
     client1.send("SendImage".encode())
+    crypter = client_to_crypter(client1)
     # We need to send name of file to client client1.send("Imagename.encode")
     remaining = client1.recv(1024).decode()
     remaining = int(remaining)
-    print(remaining)
+    client1.send(crypter.encrypt_string(f"You are sending file of size: {remaining}\n"))
     #remaining = 206975 #size of file
+    crypter = client_to_crypter(client1)
     with open('gotit.jpg','wb') as file:
         while remaining:
             image_data = client1.recv(min(4096,remaining))
             remaining -= len(image_data)
             file.write(image_data)
         file.close()
-        print("We got the whole image")   
+        help_message = "Server has received the entire file\n"       
+        help_message = crypter.encrypt_string(help_message)
+        client1.send(help_message)      
+    
+    # HERE WE WANT TO USE GOTIT and send it to 1 or more clients
+        # WE want user to be able to send multiple files so gotit would have to be deleted after broadcasting.
+        #print("Server has received the entire file")   
     
 #we add commands here
 def commands(message1, client):
     name_of_client = namelookup(client)
-
+    crypterX = client_to_crypter(client)
+    print("message1:",message1)
     if "/chatmember" in str(message1):
         chat_member(client)
     elif "/disconnect" in str(message1):
         client.send("Exit".encode())
-        client.close()
+        #client.close()
         # We need to make sure client is deleted off our lists
     elif "/help" in str(message1):
         helps(client, name_of_client)
@@ -403,8 +502,8 @@ def commands(message1, client):
     elif "/sendfile" in str(message1):
         sendfile(client)
     else:
-        client.send("Command Not Found, Use /help to Check for Command\n".encode())
-
+        client.send(crypterX.encrypt_string("Command Not Found, Use /help to Check for Command\n"))
+        #client.send("Command Not Found, Use /help to Check for Command\n".encode())
 
 # Ready to receieve connection
 print("Server open for connection")
