@@ -5,14 +5,11 @@ import time
 import getpass
 import threading
 import tkinter
-#from Tkinter import 
-import tkinter as tk
-from tkinter import scrolledtext
-from tkinter import simpledialog
+from gui import Login
 from crypter import AESCrypter
+from tkinter import simpledialog
+from tkinter import scrolledtext
 from base64 import b64encode, b64decode
-from tkinter import Tk, Canvas, Entry, Text, Button, PhotoImage, messagebox
-
 
 HOST = "127.0.0.1"
 PORT = 1400
@@ -35,12 +32,14 @@ class Client:
                 print("trying again..")
 
         # Create window for login
-        msgbox = tkinter.Tk()
-        msgbox.withdraw()
+        # msgbox = tkinter.Tk()
+        # msgbox.withdraw()
 
         #Create login elements
-        self.username = simpledialog.askstring("Username", "Please enter nickname: ", parent=msgbox)
-        self.password = simpledialog.askstring("Password", "Enter password",show="*", parent=msgbox)
+        # self.username = simpledialog.askstring("Username", "Please enter nickname: ", parent=msgbox)
+        # self.password = simpledialog.askstring("Password", "Enter password",show="*", parent=msgbox)
+
+        self.gui_loop()
 
         # Store username and password in json var
         self.user_pass_json = (self.username, self.password)
@@ -61,42 +60,16 @@ class Client:
         thread_receive.start()
         # thread_chat.start()
         # when gui loop runs on its own thread SIGSEGV signals are emitted...
-        self.gui_loop()
+        #self.gui_loop()
 
     # Create chat GUI window for client 
     # Needs to look nicer
     # Button for sending file
     def gui_loop(self):
         self.win = tkinter.Tk()
-        self.win.configure(bg="#4682B4")
+        login = Login(self.win)
 
-        self.chat_label = tkinter.Label(self.win, text="Chat:", fg="white", bg="#4682B4")
-        self.chat_label.config(font=("Calibri,12"))
-        self.chat_label.pack(padx=20, pady=5)
 
-        self.text_area = tkinter.scrolledtext.ScrolledText(self.win)
-        self.text_area.config(state='disabled')
-        self.text_area.pack(padx=20, pady=5)
-
-        self.message_label = tkinter.Label(self.win, text="Message:", fg="white", bg="#4682B4")
-        self.message_label.config(font=("Calibri,12"))
-        self.message_label.pack(padx=20, pady=5)
-
-        self.message_box = tkinter.Text(self.win, height=3)
-        self.message_box.pack(padx=20, pady=5)
-
-        self.send_button = tkinter.Button(self.win, text="Send", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.chat)
-        self.send_button.config(font=("Calibri,12"))
-        #self.send_button.pack(padx=20, pady=5)
-        self.send_button.pack()
-
-        self.gui_done = True
-
-        # When window is closed we call end function
-        self.win.protocol("WM_DELETE_WINDOW", self.end)
-
-        # Binds return button to func
-        self.win.bind('<Return>',lambda event:self.chat())
         self.win.mainloop()
 
     def receive(self):
