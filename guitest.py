@@ -5,7 +5,6 @@ import time
 import threading
 from gui import App
 from crypter import AESCrypter
-from GUI import GUI
 from PIL import Image
 from base64 import b64encode, b64decode
 from playsound import playsound #pip install playsound==1.2.2
