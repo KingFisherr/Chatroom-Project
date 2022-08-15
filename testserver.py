@@ -111,12 +111,13 @@ def receive():
         else:
             print("stored user info")
             # user cannot enter hashed password so it will not match database
-            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            #hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
             
+            #print (f'before stored {hashed}')
             # checking if DB exists before trying to store
             #db.checkfordb('user_database.sqlite')
-            db.storeuserinfo(username, hashed) 
-            #db.storeuserinfo(username, password) 
+            #db.storeuserinfo(username, hashed) 
+            db.storeuserinfo(username, password) 
 
         # Update client list and username list with new client
         crypters.append(crypter)
@@ -478,7 +479,7 @@ def sendfile(client1):
         file.close()
         help_message = "Server has received the entire file\n"       
         help_message = crypter.encrypt_string(help_message)
-        client1.send(help_message.decode())  
+        client1.send(help_message)  
 
 def send_to_client(client1):
     client1.send("RecvImage".encode())
