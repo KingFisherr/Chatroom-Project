@@ -3,6 +3,7 @@ import json
 import socket
 import time
 import threading
+import settings
 from gui import App
 from crypter import AESCrypter
 from PIL import Image
@@ -12,8 +13,7 @@ from playsound import playsound #pip install playsound==1.2.2
 HOST = "127.0.0.1"
 PORT = 1400
 
-file_name = ""
-last_file = ""
+settings.init()
 
 class Client:
     def __init__(self, host, port):
@@ -93,8 +93,7 @@ class Client:
                     thread_stopped = True
 
                 elif data == "SendImage":
-                    global file_name
-                    file = open(file_name, 'rb')
+                    file = open(settings.file_name, 'rb')
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()
                     self.clientsocket.send(str(file_size).encode())

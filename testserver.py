@@ -102,6 +102,7 @@ def receive():
             print("Username exists")
             # If username exists then verify login
             if not db.checkloginHash(username, password):
+            #if not db.checklogin(username, password):
                 print("Password does not match")
                 # We want to disconnect client so they retry password
                 clientconn.send("Wrongpass".encode())
@@ -114,8 +115,8 @@ def receive():
             
             # checking if DB exists before trying to store
             #db.checkfordb('user_database.sqlite')
-            db.storeuserinfo(username, hashed)
-            db.storeuserinfo(username, password)
+            db.storeuserinfo(username, hashed) 
+            #db.storeuserinfo(username, password) 
 
         # Update client list and username list with new client
         crypters.append(crypter)
@@ -477,7 +478,7 @@ def sendfile(client1):
         file.close()
         help_message = "Server has received the entire file\n"       
         help_message = crypter.encrypt_string(help_message)
-        client1.send(help_message)  
+        client1.send(help_message.decode())  
 
 def send_to_client(client1):
     client1.send("RecvImage".encode())

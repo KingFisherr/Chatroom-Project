@@ -1,11 +1,17 @@
+import imp
 import json
+import settings
 from pathlib import Path
 from tkinter import filedialog, Tk, Canvas, Entry, messagebox, Button, PhotoImage, Frame, Label
 from tkinter import scrolledtext
+from crypter import AESCrypter
 import tkinter
+
+settings.init()
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+
 
 def relative_to_assets(path: str) -> Path:
     print(ASSETS_PATH / Path(path))
@@ -303,31 +309,26 @@ class ChatBox(Frame):
         self.text_area.config(state='disabled')
 
     def get_file_path(self):
-        global file_name
-        global last_file
-        file_name = filedialog.askopenfilename()
-        if file_name is last_file:
+        settings.file_name = filedialog.askopenfilename()
+        if settings.file_name is settings.last_file:
             print("NO FILE")
             messagebox.showerror("Please select a folder first")
             # Who to send tooijoijopifjdopifj
         else:
-            last_file = file_name
+            settings.last_file = settings.file_name
             self.file_handler()
             
-    def on_file_confirmed(self):
-        global file_name
-        global last_file
-        if file_name is last_file:
-            print("NO FILE")
-            messagebox.showerror("Please select a folder first")
-            # Who to send to
-        else:
-            last_file = file_name
-            self.file_handler()
-            # DO something with file name
+    # def on_file_confirmed(self):
+    #     if file_name is last_file:
+    #         print("NO FILE")
+    #         messagebox.showerror("Please select a folder first")
+    #         # Who to send to
+    #     else:
+    #         last_file = file_name
+    #         self.file_handler()
+    #         # DO something with file name
 
     def file_handler(self):
-        global file_name
         # self.message_dict = {"File": file_name}
         # self.message_dict = json.dumps(self.message_dict)
         message = "SENDXX"
@@ -337,8 +338,8 @@ class ChatBox(Frame):
     
     def fileDownloadHandler(self):
         message = "RECVXX"
-        message = self.crypter.encrypt_string(message)
-        self.clientsocket.send(message)   
+        #message = self.crypter.encrypt_string(message)
+        self.controller.client.send_message(message)   
  
     def chat(self, _event=None):
         print("do something please")
