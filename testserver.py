@@ -113,9 +113,9 @@ def receive():
             hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
             
             # checking if DB exists before trying to store
-            #db.checkfordb('user_database.sqlite')
-            db.storeuserinfo(username, hashed)
-            db.storeuserinfo(username, password)
+            db.checkfordb('user_database.sqlite')
+            db.storeuserinfo(username, hashed.decode())
+            #db.storeuserinfo(username, password)
         # Update client list and username list with new client
         crypters.append(crypter)
         clients.append(clientconn)
@@ -176,7 +176,7 @@ def handler(client):
 
 
             #search for command
-            print (f"THIS IS DSMG {dmsg}")
+            print (f"THIS IS DSMG {dmsg.decode()}")
             if re.search (r":\s/.",str(dmsg)):
                 broadcast_single(dmsg.decode(), client)
                 commands(dmsg, client)

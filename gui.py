@@ -1,8 +1,11 @@
 import json
+import settings
 from pathlib import Path
 from tkinter import filedialog, Tk, Canvas, Entry, messagebox, Button, PhotoImage, Frame, Label
 from tkinter import scrolledtext
 import tkinter
+
+settings.init()
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
@@ -272,9 +275,11 @@ class ChatBox(Frame):
 
         self.send_button = tkinter.Button(self, text="Send", bg="#4682B4", borderwidth=3, relief="sunken",
                                           activebackground="#4682B4", activeforeground="Orange", command=self.chat)
+        
         self.send_button.config(font=("Calibri,12"))
         # self.send_button.pack(padx=20, pady=5)
-        self.send_button.pack()
+        #self.send_button.pack()
+        self.send_button.place(x=20.0, y=400.0, width=190.0, height=48.0)
 
         self.select_file_button = tkinter.Button(self, text="Open File", bg="#4682B4", borderwidth=3,
                                                  relief="sunken", activebackground="#4682B4", activeforeground="Orange",
@@ -284,7 +289,7 @@ class ChatBox(Frame):
 
         self.send_file_button = tkinter.Button(self, text="Confirm File Choice", bg="#4682B4", borderwidth=3,
                                                relief="sunken", activebackground="#4682B4", activeforeground="Orange",
-                                               command=self.on_file_confirmed)
+                                               command=self.fileDownloadHandler)
         self.send_file_button.config(font=("Calibri,12"))
         self.send_file_button.pack()
 
@@ -303,32 +308,43 @@ class ChatBox(Frame):
         self.text_area.config(state='disabled')
 
     def get_file_path(self):
-        global file_name
-        file_name = filedialog.askopenfilename()
-
-    def on_file_confirmed(self):
-        global file_name
-        global last_file
-        if file_name is last_file:
+        settings.file_name = filedialog.askopenfilename()
+        if settings.file_name is settings.last_file:
             print("NO FILE")
             messagebox.showerror("Please select a folder first")
-            # Who to send to
+            # Who to send tooijoijopifjdopifj
         else:
-            last_file = file_name
-            self.fileHandler()
+            settings.last_file = settings.file_name
+            self.file_handler()
+
+    # def on_file_confirmed(self):
+#         global file_name
+#         global last_file
+#         if file_name is last_file:
+#             print("NO FILE")
+#             messagebox.showerror("Please select a folder first")
+#             # Who to send to
+#         else:
+#             last_file = file_name
+#             self.fileHandler()
             # DO something with file name
 
     def file_handler(self):
-        global file_name
+        #global file_name
         # self.message_dict = {"File": file_name}
         # self.message_dict = json.dumps(self.message_dict)
         message = "SENDXX"
         self.controller.client.send_message(message)
         # Send file path as string to server
         # {"type":"File", "body":"chatroom or a client"}
+        
+    def fileDownloadHandler(self):
+        message = "RECVXX"
+        #message = self.crypter.encrypt_string(message)
+        self.controller.client.send_message(message)    
 
     def chat(self, _event=None):
-        print("do something please")
+        #print("do something please")
         message = f"{self.controller.username}: {self.message_box.get('1.0', 'end')}"
         self.controller.client.send_message(message)
         self.message_box.delete('1.0', 'end')

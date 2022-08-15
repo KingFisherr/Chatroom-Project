@@ -3,6 +3,7 @@ import json
 import socket
 import time
 import threading
+import settings
 from gui import App
 from crypter import AESCrypter
 from base64 import b64encode, b64decode
@@ -11,8 +12,10 @@ from playsound import playsound #pip install playsound==1.2.2
 HOST = "127.0.0.1"
 PORT = 1400
 
-file_name = ""
-last_file = ""
+setting.init()
+
+# file_name = ""
+# last_file = ""
 
 class Client:
     def __init__(self, host, port):
@@ -57,7 +60,7 @@ class Client:
                 # Get data from server
                 data = self.clientsocket.recv(2048).decode()
 
-                print("RAW DATA {}".format(data))
+                #print("RAW DATA {}".format(data))
                 if data == "Username":
                     self.clientsocket.send(self.user_pass_json.encode())
 
@@ -92,10 +95,7 @@ class Client:
                     thread_stopped = True
 
                 elif data == "SendImage":
-                    # open image (somehow need to get file name)
-                    # We can use global variable to hold file name
-                    global file_name
-                    file = open(file_name, 'rb')
+                    file = open(settings.file_name, 'rb')
                     file.seek(0, os.SEEK_END)
                     file_size = file.tell()
                     self.clientsocket.send(str(file_size).encode())
@@ -108,17 +108,30 @@ class Client:
                             image_data = file.read(4096)
                         if not image_data:
                             file.close()
+                            print ("FILE COMPLETELY SENT")
                             break
 
                 elif data == "RecvImage":
-                    # open file to read image into
-                    file = open('gotit.jpg', 'wb')
-                    # GET IMAGE FROM SERVER
-                    image_data = self.clientsocket.recv(2048)
-                    while image_data:
-                        file.write(image_data)
-                        image_data = self.clientsocket.recv(2048)
-                    file.close()
+                   # WE tell server we are ready to get file
+                   self.clientsocket.send("READYTORECV".encode())
+                   remaining = self.clientsocket.recv(1024).decode()
+                   print (f"REMAINING IS: {remaining}")
+                   remaining = int(remaining)
+                   #remaining = 206993
+                   #print (remaining) REMAINING IS: LPwrNp0I3GwJWRtxYesCqZ+qrh0vgFGieEpZ
+                   with open('endloc.jpg','wb') as file:
+                       while remaining:
+                           image_data = self.clientsocket.recv(min(4096,remaining))
+                           remaining -= len(image_data)
+                           file.write(image_data)                    
+                       file.close()
+                   print (f"{file.name} ALL RECV")
+                   # Display image in new tkinter window
+                   path = os.path.abspath(file.name)
+                   print (path)
+                   im = Image.open(path)
+
+                   im.show()
 
                 elif data == "IV":
                     send_iv = b64decode(self.clientsocket.recv(24).decode())
