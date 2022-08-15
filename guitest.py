@@ -2,19 +2,9 @@ import os
 import json
 import socket
 import time
-import getpass
 import threading
-import tkinter
 from gui import App
-import tkinter as tk
-from tkinter import scrolledtext
-from tkinter import ttk
-from tkinter import filedialog
-from tkinter import simpledialog
-from tkinter import messagebox
 from crypter import AESCrypter
-from tkinter import simpledialog
-from tkinter import scrolledtext
 from base64 import b64encode, b64decode
 from playsound import playsound #pip install playsound==1.2.2
 
@@ -29,89 +19,40 @@ class Client:
 
         # Connect to server
         self.clientsocket = None
+        self.crypter = AESCrypter()
+        self.app = App(self)
+        self.host = host
+        self.port = port
+        self.app.mainloop()
 
+    def connect_to_server(self, username, password):
         while True:
             try:
                 # print(host, " : ", port)
                 self.clientsocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-                self.clientsocket.connect((host, port))  # Host/port
+                self.clientsocket.connect((self.host, self.port))  # Host/port
                 break
             except Exception as e:
                 print("failed to connect to server ec {}".format(e))
                 time.sleep(1)
                 print("trying again..")
 
-        # Create window for login
-        # msgbox = tkinter.Tk()
-        # msgbox.withdraw()
-
-        #Create login elements
-        # self.username = simpledialog.askstring("Username", "Please enter nickname: ", parent=msgbox)
-        # self.password = simpledialog.askstring("Password", "Enter password",show="*", parent=msgbox)
-
-        self.gui_loop()
-
         # Store username and password in json var
-        self.user_pass_json = (self.username, self.password)
+        self.user_pass_json = (username, password)
         self.user_pass_json = json.dumps(self.user_pass_json)
 
-        self.crypter = AESCrypter()
-
-        # Set GUI_DONE to false and GUI_RUNNING to true
-        self.gui_done = False
-        self.gui_running = True
-
-        #gui_thread = threading.Thread(target=self.gui_loop)
         thread_receive = threading.Thread(target=self.receive)
-        # thread_chat = threading.Thread(target= self.chat)
-
-        #gui_thread.start()
-        #time.sleep(1)
         thread_receive.start()
-        # thread_chat.start()
-        # when gui loop runs on its own thread SIGSEGV signals are emitted...
-        #self.gui_loop()
 
-    # Create chat GUI window for client 
-    # Needs to look nicer
-    # Button for sending file
-    def gui_loop(self):
-        self.win = tkinter.Tk()
-        self.win.configure(bg="#4682B4")
-
-        self.chat_label = tkinter.Label(self.win, text="Chat:", fg="white", bg="#4682B4")
-        self.chat_label.config(font=("Calibri,12"))
-        self.chat_label.pack(padx=20, pady=5)
-
-        self.text_area = tkinter.scrolledtext.ScrolledText(self.win)
-        self.text_area.config(state='disabled')
-        self.text_area.pack(padx=20, pady=5)
-
-        self.message_label = tkinter.Label(self.win, text="Message:", fg="white", bg="#4682B4")
-        self.message_label.config(font=("Calibri,12"))
-        self.message_label.pack(padx=20, pady=5)
-
-        self.message_box = tkinter.Text(self.win, height=3)
-        self.message_box.pack(padx=20, pady=5)
-
-        self.send_button = tkinter.Button(self.win, text="Send", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.chat)
-        self.send_button.config(font=("Calibri,12"))
-        #self.send_button.pack(padx=20, pady=5)
-        self.send_button.pack()
-
-        self.select_file_button = tkinter.Button(self.win, text="Open File", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.getFilePath)
-        self.select_file_button.config(font=("Calibri,12"))
-        self.select_file_button.pack()
-    
-        self.send_file_button = tkinter.Button(self.win, text="Confirm File Choice", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.onFileConfirmed)
-        self.send_file_button.config(font=("Calibri,12"))
-        self.send_file_button.pack()
-
-        self.gui_done = True
-        self.win.mainloop()
+    def send_message(self, message, encrypt=True):
+        emsg = message
+        if encrypt:
+            emsg = self.crypter.encrypt_string(message)
+        # data_dict = {"Message": emsg} # MAYBE WE MAKE DICT HERE (yes pls)
+        self.clientsocket.send(emsg)
 
     def receive(self):
-        while self.gui_running:
+        while self.app.gui_running:
             try:
                 # Get data from server
                 data = self.clientsocket.recv(2048).decode()
@@ -124,7 +65,7 @@ class Client:
                 elif data == "Banned":
                     print('You are banned from this server. Please contact Admin.')
                     self.clientsocket.close()
-                    self.gui_done = True
+                    self.app.gui_done = True
                     self.end()
                     thread_stopped = True
 
@@ -132,21 +73,21 @@ class Client:
                 elif data == "Wrongpass":
                     print("Wrong password, try again")
                     self.clientsocket.close()
-                    self.gui_done = True
+                    self.app.gui_done = True
                     self.end()
                     thread_stopped = True
 
                 elif data == "Duplicate":
                     print("User is already logged in")
                     self.clientsocket.close()
-                    self.gui_done = True
+                    self.app.gui_done = True
                     self.end()
                     thread_stopped = True
 
                 # exit Gui if receive exit
                 elif data == "Exit":
                     self.clientsocket.close()
-                    self.gui_done = True
+                    self.app.gui_done = True
                     self.end()
                     thread_stopped = True
 
@@ -196,13 +137,10 @@ class Client:
                     raise Exception("received empty string, server probably disconnected")
 
                 else:
-                    if self.gui_running:
+                    if self.app.gui_running:
                         if self.crypter.initialized():
                             data = self.crypter.decrypt_string(data)
-                        self.text_area.config(state='normal')
-                        self.text_area.insert('end', data)
-                        self.text_area.yview('end')
-                        self.text_area.config(state='disabled')
+                        self.app.chat_frame.recv_message(data)
 
             except Exception as ex:
                 template = "An exception of type {0} occurred. Arguments:\n{1!r}"
@@ -212,59 +150,12 @@ class Client:
                 self.clientsocket.close()
                 break
 
-
-    def chat(self, _event=None):
-        message = f"{self.username}: {self.message_box.get('1.0', 'end')}"
-        emsg = self.crypter.encrypt_string(message)
-
-        # MAYBE WE MAKE DICT HERE
-        #data_dict = {"Message": emsg}
-        self.clientsocket.send(emsg)
-        self.message_box.delete('1.0', 'end')
-        #{"type":"Text", "body":"the message"}
-        # If we detect user is sending a file we can update a global var with file name
-
-    def getFilePath(self):
-        global file_name 
-        file_name = filedialog.askopenfilename()
-
-    def onFileConfirmed(self):
-        global file_name
-        global last_file
-        if file_name is last_file:
-            print("NO FILE")
-            messagebox.showerror("Please select a folder first")
-            # Who to send tooijoijopifjdopifj
-        else:
-            last_file = file_name
-            self.fileHandler()
-            # DO something with file name
-
-    def fileHandler(self):
-        global file_name
-        #self.message_dict = {"File": file_name}
-        #self.message_dict = json.dumps(self.message_dict)
-        message = "SENDXX"
-        message = self.crypter.encrypt_string(message)
-        self.clientsocket.send(message)
-        # Send file path as string to server
-        # {"type":"File", "body":"chatroom or a client"}
-
-
-    # A function which sends file
-    # Gets path of file via input on gui button (browser)
-    # Gets size of file 
-    # Notifies server of file transfer (with file size, and file destination) ** Or maybe we update global var
-    # Receives 
-
     # Stop GUI and close client socket
     def end(self):
         self.clientsocket.close()
-        self.gui_running = False
-        self.win.destroy()
-        # self.clientsocket.close()
+        self.app.gui_running = False
+        self.app.destroy()
         exit(0)
-
 
 # Initialize client object
 client = Client(HOST, PORT)

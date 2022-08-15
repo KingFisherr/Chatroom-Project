@@ -101,7 +101,7 @@ def receive():
         if db.checkUsername(username):
             print("Username exists")
             # If username exists then verify login
-            if not db.checklogin(username, password):
+            if not db.checkloginHash(username, password):
                 print("Password does not match")
                 # We want to disconnect client so they retry password
                 clientconn.send("Wrongpass".encode())
@@ -110,11 +110,11 @@ def receive():
         else:
             print("stored user info")
             # user cannot enter hashed password so it will not match database
-            #hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
             
             # checking if DB exists before trying to store
             #db.checkfordb('user_database.sqlite')
-            #db.storeuserinfo(username, hashed.decode())
+            db.storeuserinfo(username, hashed)
             db.storeuserinfo(username, password)
         # Update client list and username list with new client
         crypters.append(crypter)
