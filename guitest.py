@@ -13,6 +13,8 @@ from tkinter import filedialog
 from tkinter import simpledialog
 from tkinter import messagebox
 from crypter import AESCrypter
+from GUI import GUI
+from PIL import Image
 from base64 import b64encode, b64decode
 from playsound import playsound #pip install playsound==1.2.2
 
@@ -97,11 +99,11 @@ class Client:
         #self.send_button.pack(padx=20, pady=5)
         self.send_button.pack()
 
-        self.select_file_button = tkinter.Button(self.win, text="Open File", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.getFilePath)
+        self.select_file_button = tkinter.Button(self.win, text="Upload File", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.getFilePath)
         self.select_file_button.config(font=("Calibri,12"))
         self.select_file_button.pack()
     
-        self.send_file_button = tkinter.Button(self.win, text="Confirm File Choice", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.onFileConfirmed)
+        self.send_file_button = tkinter.Button(self.win, text="Send File", bg="#4682B4", borderwidth=3, relief="sunken", activebackground="#4682B4", activeforeground="Orange", command=self.fileDownloadHandler)
         self.send_file_button.config(font=("Calibri,12"))
         self.send_file_button.pack()
 
@@ -155,8 +157,6 @@ class Client:
                     thread_stopped = True
 
                 elif data == "SendImage":
-                    # open image (somehow need to get file name)
-                    # We can use global variable to hold file name
                     global file_name
                     file = open(file_name, 'rb')
                     file.seek(0, os.SEEK_END)
@@ -171,17 +171,35 @@ class Client:
                             image_data = file.read(4096)
                         if not image_data:
                             file.close()
+                            print ("FILE COMPLETELY SENT")
                             break
 
                 elif data == "RecvImage":
-                    # open file to read image into
-                    file = open('gotit.jpg', 'wb')
-                    # GET IMAGE FROM SERVER
-                    image_data = self.clientsocket.recv(2048)
-                    while image_data:
-                        file.write(image_data)
-                        image_data = self.clientsocket.recv(2048)
-                    file.close()
+                    # WE tell server we are ready to get file
+                    self.clientsocket.send("READYTORECV".encode())
+                    remaining = self.clientsocket.recv(1024).decode()
+                    print (f"REMAINING IS: {remaining}")
+                    remaining = int(remaining)
+                    #remaining = 206993
+                    #print (remaining) REMAINING IS: LPwrNp0I3GwJWRtxYesCqZ+qrh0vgFGieEpZ
+                    with open('endloc.jpg','wb') as file:
+                        while remaining:
+                            image_data = self.clientsocket.recv(min(4096,remaining))
+                            remaining -= len(image_data)
+                            file.write(image_data)                    
+                        file.close()
+                    print (f"{file.name} ALL RECV")
+                    # Display image in new tkinter window
+                    path = os.path.abspath(file.name)
+                    print (path)
+                    im = Image.open(path)
+ 
+                    im.show()                    
+
+                    # window = GUI()
+                    # image_gui_thread = threading.Thread(target = window.createImageWindow, args= (file.name,))
+                    # image_gui_thread.start()
+                    #window.createImageWindow(file.name)
 
                 elif data == "IV":
                     send_iv = b64decode(self.clientsocket.recv(24).decode())
@@ -230,7 +248,16 @@ class Client:
 
     def getFilePath(self):
         global file_name 
+        global last_file
         file_name = filedialog.askopenfilename()
+        if file_name is last_file:
+            print("NO FILE")
+            messagebox.showerror("Please select a folder first")
+            # Who to send tooijoijopifjdopifj
+        else:
+            last_file = file_name
+            self.fileHandler()
+            # DO something with file name
 
     def onFileConfirmed(self):
         global file_name
@@ -253,6 +280,11 @@ class Client:
         self.clientsocket.send(message)
         # Send file path as string to server
         # {"type":"File", "body":"chatroom or a client"}
+
+    def fileDownloadHandler(self):
+        message = "RECVXX"
+        message = self.crypter.encrypt_string(message)
+        self.clientsocket.send(message)       
 
 
     # A function which sends file
