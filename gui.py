@@ -102,7 +102,7 @@ class Login(Frame):
 
         self.canvas.create_text(
             85.0,
-            77.0,
+            66.0,
             anchor="nw",
             text="ChatBox",
             fill="#FFFFFF",
@@ -156,20 +156,20 @@ class Login(Frame):
             90.0,
             431.0,
             anchor="nw",
-            text="© Tahsin, Haoming, Jonathan 2022",
+            text="© Tahsin, Haoming, Jonathan, 2022",
             fill="#FFFFFF",
             font=("Montserrat Bold", 18 * -1),
         )
 
         self.image_image_1 = PhotoImage(file=relative_to_assets("image_3.png"))
         self.image_image_1 = self.image_image_1.subsample(2)
-        self.image_1 = self.canvas.create_image(455.0, 230.0, image=self.image_image_1)
+        self.image_1 = self.canvas.create_image(440.0, 230.0, image=self.image_image_1)
 
         self.canvas.create_text(
             90.0,
             150.0,
             anchor="nw",
-            text="ChatBox is a regular",
+            text="Is a regular instant",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -178,7 +178,7 @@ class Login(Frame):
             90.0,
             179.0,
             anchor="nw",
-            text="messeging system that",
+            text="messaging application with",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -187,7 +187,7 @@ class Login(Frame):
             90.0,
             208.0,
             anchor="nw",
-            text="allows you to talk to your freinds,",
+            text="end-to-end encryption.",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -196,7 +196,7 @@ class Login(Frame):
             90.0,
             237.0,
             anchor="nw",
-            text="near and far around the world",
+            text="With ChatBox you can talk to",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -205,7 +205,7 @@ class Login(Frame):
             90.0,
             266.0,
             anchor="nw",
-            text="using a well-engineered solution.",
+            text="your friends near and far",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -214,7 +214,7 @@ class Login(Frame):
             90.0,
             295.0,
             anchor="nw",
-            text="Login to have a look for",
+            text="around the world. Login to",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -223,7 +223,16 @@ class Login(Frame):
             90.0,
             324.0,
             anchor="nw",
-            text="yourself...",
+            text="send messages and media",
+            fill="#FFFFFF",
+            font=("Montserrat Regular", 18 * -1),
+        )
+        
+        self.canvas.create_text(
+            90.0,
+            353.0,
+            anchor="nw",
+            text="to users like you . . .",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
