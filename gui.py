@@ -1,14 +1,17 @@
+import imp
 import json
 import settings
 from pathlib import Path
 from tkinter import filedialog, Tk, Canvas, Entry, messagebox, Button, PhotoImage, Frame, Label
 from tkinter import scrolledtext
+from crypter import AESCrypter
 import tkinter
 
 settings.init()
 
 OUTPUT_PATH = Path(__file__).parent
 ASSETS_PATH = OUTPUT_PATH / Path("./assets")
+
 
 def relative_to_assets(path: str) -> Path:
     print(ASSETS_PATH / Path(path))
@@ -107,7 +110,7 @@ class Login(Frame):
             85.0,
             66.0,
             anchor="nw",
-            text="ChatBox",
+            text="LiveChat",
             fill="#FFFFFF",
             font=("Montserrat Bold", 50 * -1),
         )
@@ -199,7 +202,7 @@ class Login(Frame):
             90.0,
             237.0,
             anchor="nw",
-            text="With ChatBox you can talk to",
+            text="With LiveChat you can talk to",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -273,26 +276,26 @@ class ChatBox(Frame):
         self.message_box = tkinter.Text(self, width=200, height=3)
         self.message_box.pack(padx=20, pady=5)
 
-        self.send_button = tkinter.Button(self, text="Send", bg="#4682B4", borderwidth=3, relief="sunken",
+        self.send_button = tkinter.Button(self, text="Send", bg="#4682B4", borderwidth=3,
                                           activebackground="#4682B4", activeforeground="Orange", command=self.chat)
-        
         self.send_button.config(font=("Calibri,12"))
         # self.send_button.pack(padx=20, pady=5)
-        #self.send_button.pack()
-        self.send_button.place(x=20.0, y=400.0, width=190.0, height=48.0)
+        # self.send_button.pack()
+        self.send_button.place(x=110.0, y=425.0, width=190.0, height=48.0)
+        #self.send_button = tkinter.Button(relief="flat")
+        
 
         self.select_file_button = tkinter.Button(self, text="Open File", bg="#4682B4", borderwidth=3,
                                                  relief="sunken", activebackground="#4682B4", activeforeground="Orange",
                                                  command=self.get_file_path)
         self.select_file_button.config(font=("Calibri,12"))
-        self.select_file_button.pack()
+        self.select_file_button.place(x=409.0, y=425.0, width=190.0, height=48.0)
 
         self.send_file_button = tkinter.Button(self, text="Confirm File Choice", bg="#4682B4", borderwidth=3,
                                                relief="sunken", activebackground="#4682B4", activeforeground="Orange",
                                                command=self.fileDownloadHandler)
         self.send_file_button.config(font=("Calibri,12"))
-        self.send_file_button.pack()
-
+        self.send_file_button.place(x=700.0, y=425.0, width=190.0, height=48.0)
         self.gui_done = True
 
         # When window is closed we call end function
@@ -317,6 +320,7 @@ class ChatBox(Frame):
             settings.last_file = settings.file_name
             self.file_handler()
 
+
     # def on_file_confirmed(self):
 #         global file_name
 #         global last_file
@@ -331,12 +335,14 @@ class ChatBox(Frame):
 
     def file_handler(self):
         #global file_name
+
         # self.message_dict = {"File": file_name}
         # self.message_dict = json.dumps(self.message_dict)
         message = "SENDXX"
         self.controller.client.send_message(message)
         # Send file path as string to server
         # {"type":"File", "body":"chatroom or a client"}
+
         
     def fileDownloadHandler(self):
         message = "RECVXX"

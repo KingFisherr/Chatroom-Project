@@ -77,7 +77,7 @@ class database:
             
     # Method checks if user login credentials are valid against a bcrypt hash
     def checkloginHash(self, username, password):
-
+        
         conn = sqlite3.connect('user_database.sqlite')
         c = conn.cursor()
         statement = (f'''SELECT password from "userinfo" WHERE username="{username}"''')
@@ -88,9 +88,10 @@ class database:
         else:
             hashed = str(row[0])
             if bcrypt.checkpw(password.encode(), hashed.encode()):
-                return True
+               #print (f'Hashed Pass: {hashed}')
+               return True
             else:
-                return False
+               return False
                 
     # Method checks if user exists in ban_database
     def checkban(self, username):    
@@ -150,6 +151,7 @@ class database:
 
 #'user_database.sqlite'
 # db = database()
+# db.deleteRecord()
 # db.getuserinfo()
 # if db.checklogin("plu", "seed"):
 #     print ("yes")

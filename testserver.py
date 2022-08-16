@@ -1,4 +1,4 @@
-from pydoc import cli
+import os
 import re
 import json
 import time
@@ -102,20 +102,21 @@ def receive():
             print("Username exists")
             # If username exists then verify login
             if not db.checkloginHash(username, password):
+            #if not db.checklogin(username, password):
                 print("Password does not match")
                 # We want to disconnect client so they retry password
                 clientconn.send("Wrongpass".encode())
                 clientconn.close()
                 continue
         else:
-            print("stored user info")
             # user cannot enter hashed password so it will not match database
             hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
-            
+            # print (f'before stored {hashed}')
             # checking if DB exists before trying to store
             db.checkfordb('user_database.sqlite')
             db.storeuserinfo(username, hashed.decode())
-            #db.storeuserinfo(username, password)
+           
+
         # Update client list and username list with new client
         crypters.append(crypter)
         clients.append(clientconn)
@@ -157,7 +158,8 @@ def handler(client):
             if message == b"":
                 raise Exception("exception: received empty string")
 
-            # print("RECEIVED RAW {}".format(message))
+            #print("Cypher text = {}".format(message.decode()))
+            # broadcast(f"Cypher text = {message}\n", client)
             dmsg = crypter.decrypt_string(message)
 
             temp = dmsg.decode()
@@ -168,6 +170,8 @@ def handler(client):
             # WE can use {"type":"Text", "body":"the message"} to decipher for command, reg message, or a file
             # data = {"type":"File", "body":"path"}
             
+            if temp == "RECVXX":
+                send_to_client(client)
             #data = json.loads(dict from client)
             # If type = message
             # Elif type = file
@@ -176,17 +180,18 @@ def handler(client):
 
 
             #search for command
-            print (f"THIS IS DSMG {dmsg.decode()}")
+            # print (f"THIS IS DSMG {dmsg.decode()}")
             if re.search (r":\s/.",str(dmsg)):
-                broadcast_single(dmsg.decode(), client)
+                broadcast_single(dmsg, client)
                 commands(dmsg, client)
+
             # Broadcast message to all clients
             elif re.search (r"@.",str(dmsg)):
                 ping(dmsg, client)
                 broadcast(dmsg.decode(), client)
 
 
-            #print("received {}".format(dmsg.decode()))
+            # print("received {}".format(dmsg.decode()))
 
             else:
                 # Broadcast message to all clients
@@ -213,7 +218,8 @@ def handler(client):
 
 # Function sends message to all clients
 def broadcast(message, client):
-    print(f"broadcasting {message}")
+    #print(f"broadcasting {message}")
+    print(message)
     for x in clients:
         # skip the sender
         # if x == client:
@@ -462,10 +468,9 @@ def sendfile(client1):
     crypter = client_to_crypter(client1)
     # We need to send name of file to client client1.send("Imagename.encode")
     remaining = client1.recv(1024).decode()
+    temp_rem = remaining
     remaining = int(remaining)
     client1.send(crypter.encrypt_string(f"You are sending file of size: {remaining}\n"))
-    #remaining = 206975 #size of file
-    crypter = client_to_crypter(client1)
     with open('gotit.jpg','wb') as file:
         while remaining:
             image_data = client1.recv(min(4096,remaining))
@@ -474,12 +479,28 @@ def sendfile(client1):
         file.close()
         help_message = "Server has received the entire file\n"       
         help_message = crypter.encrypt_string(help_message)
-        client1.send(help_message)      
-    
-    # HERE WE WANT TO USE GOTIT and send it to 1 or more clients
-        # WE want user to be able to send multiple files so gotit would have to be deleted after broadcasting.
-        #print("Server has received the entire file")   
-    
+        client1.send(help_message)  
+
+def send_to_client(client1):
+    client1.send("RecvImage".encode())
+    fileToSend = open('gotit.jpg', 'rb')
+    fileToSend.seek(0, os.SEEK_END)
+    file_size = fileToSend.tell()
+    data_message = client1.recv(1024).decode()
+    if data_message == "READYTORECV":
+        print("Size of file is :", file_size,"bytes")
+        client1.send(str(file_size).encode())
+        fileToSend.seek(0,0)
+        print ("Sending file...")
+        while True:
+            image_data = fileToSend.read(4096)
+            while (image_data):
+                client1.send(image_data)
+                image_data = fileToSend.read(4096)
+            if not image_data:
+                fileToSend.close() 
+                break
+        
 #we add commands here
 def commands(message1, client):
     name_of_client = namelookup(client)

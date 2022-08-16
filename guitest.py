@@ -6,16 +6,19 @@ import threading
 import settings
 from gui import App
 from crypter import AESCrypter
+from PIL import Image
 from base64 import b64encode, b64decode
 from playsound import playsound #pip install playsound==1.2.2
 
 HOST = "127.0.0.1"
 PORT = 1400
 
-setting.init()
+
+settings.init()
 
 # file_name = ""
 # last_file = ""
+
 
 class Client:
     def __init__(self, host, port):
@@ -112,6 +115,7 @@ class Client:
                             break
 
                 elif data == "RecvImage":
+
                    # WE tell server we are ready to get file
                    self.clientsocket.send("READYTORECV".encode())
                    remaining = self.clientsocket.recv(1024).decode()
@@ -132,6 +136,7 @@ class Client:
                    im = Image.open(path)
 
                    im.show()
+
 
                 elif data == "IV":
                     send_iv = b64decode(self.clientsocket.recv(24).decode())
