@@ -44,6 +44,8 @@ class Client:
 
         thread_receive = threading.Thread(target=self.receive)
         thread_receive.start()
+        # thread_recv_file = threading.Thread(target=self.recv_file)
+        # thread_recv_file.start() 
 
     def send_message(self, message, encrypt=True):
         emsg = message
@@ -110,26 +112,33 @@ class Client:
                             break
 
                 elif data == "RecvImage":
+                    #Start getting file via on a thread
+                    # thread_recv_file = threading.Thread(target=self.recv_file)
+                    # thread_recv_file.start()                   
+
                     # WE tell server we are ready to get file
                     self.clientsocket.send("READYTORECV".encode())
                     remaining = self.clientsocket.recv(1024).decode()
                     print (f"REMAINING IS: {remaining}")
-                    remaining = int(remaining)
-                    #remaining = 206993
-                    #print (remaining) REMAINING IS: LPwrNp0I3GwJWRtxYesCqZ+qrh0vgFGieEpZ
-                    with open('endloc.jpg','wb') as file:
-                        while remaining:
-                            image_data = self.clientsocket.recv(min(4096,remaining))
-                            remaining -= len(image_data)
-                            file.write(image_data)                    
-                        file.close()
-                    print (f"{file.name} ALL RECV")
-                    # Display image in new tkinter window
-                    path = os.path.abspath(file.name)
-                    print (path)
-                    im = Image.open(path)
- 
-                    im.show()                    
+                    print (f"REMAINING IS: {self.crypter.decrypt_string(remaining)}")
+                    if type(remaining) == int: 
+                        print (f"REMAINING IS: {self.crypter.decrypt_string(remaining)}")
+                        remaining = int(remaining)
+                        #remaining = 206993
+                        #print (remaining) REMAINING IS: LPwrNp0I3GwJWRtxYesCqZ+qrh0vgFGieEpZ
+                        with open('endloc.jpg','wb') as file:
+                            while remaining:
+                                image_data = self.clientsocket.recv(min(4096,remaining))
+                                remaining -= len(image_data)
+                                file.write(image_data)                    
+                            file.close()
+                        print (f"{file.name} ALL RECV")
+                        # Display image in new tkinter window
+                        path = os.path.abspath(file.name)
+                        print (path)
+                        im = Image.open(path)
+
+                        im.show()                    
 
                     # window = GUI()
                     # image_gui_thread = threading.Thread(target = window.createImageWindow, args= (file.name,))
@@ -172,6 +181,30 @@ class Client:
         self.app.gui_running = False
         self.app.destroy()
         exit(0)
+
+    # def recv_file(self):
+    #     data = self.clientsocket.recv(2048).decode()
+    #     if data == "RECVXX":
+    #         self.clientsocket.send("READYTORECV".encode())
+    #         remaining = self.clientsocket.recv(1024).decode()
+    #         print (f"REMAINING IS: {self.crypter.decrypt_string(remaining)}")
+    #         if type(remaining) == int: 
+    #             remaining = int(remaining)
+    #             #remaining = 206993
+    #             #print (remaining) REMAINING IS: LPwrNp0I3GwJWRtxYesCqZ+qrh0vgFGieEpZ
+    #             with open('endloc.jpg','wb') as file:
+    #                 while remaining:
+    #                     image_data = self.clientsocket.recv(min(4096,remaining))
+    #                     remaining -= len(image_data)
+    #                     file.write(image_data)                    
+    #                 file.close()
+    #             print (f"{file.name} ALL RECV")
+    #             # Display image in new tkinter window
+    #             path = os.path.abspath(file.name)
+    #             print (path)
+    #             im = Image.open(path)
+
+    #         im.show()   
 
 # Initialize client object
 client = Client(HOST, PORT)

@@ -138,7 +138,8 @@ def receive():
         # Handle multiple clients
         handlerthread = threading.Thread(target=handler, args=(clientconn,))
         handlerthread.start()
-
+        # send_to_clientthread = threading.Thread(target=send_to_client, args=(clientconn,))
+        # send_to_clientthread.start()
 
 def client_to_crypter(client):
     # get the index of the target client
@@ -166,23 +167,14 @@ def handler(client):
             temp = dmsg.decode()
 
             if temp == "SENDXX":
-                #if filePermission(client) == "SERVER":
-                sendfile(client)
-            # WE can use {"type":"Text", "body":"the message"} to decipher for command, reg message, or a file
-            # data = {"type":"File", "body":"path"}
-            
-            if temp == "RECVXX":
+                sendfile(client)                
+    
+            elif temp == "RECVXX":
                 send_to_client(client)
-            #data = json.loads(dict from client)
-            # If type = message
-            # Elif type = file
-                # Sendfile func
-            # Elif type = command
-
-
             #search for command
-            print (f"THIS IS DSMG {dmsg}")
-            if re.search (r":\s/.",str(dmsg)):
+
+            #print (f"THIS IS DSMG {dmsg}")
+            elif re.search (r":\s/.",str(dmsg)):
                 broadcast_single(dmsg.decode(), client)
                 commands(dmsg, client)
 
@@ -190,9 +182,6 @@ def handler(client):
             elif re.search (r"@.",str(dmsg)):
                 ping(dmsg, client)
                 broadcast(dmsg.decode(), client)
-
-
-            #print("received {}".format(dmsg.decode()))
 
             else:
                 # Broadcast message to all clients
@@ -482,6 +471,8 @@ def sendfile(client1):
         client1.send(help_message)  
 
 def send_to_client(client1):
+    client1 = clients[1]
+    print (namelookup(client1))
     client1.send("RecvImage".encode())
     fileToSend = open('gotit.jpg', 'rb')
     fileToSend.seek(0, os.SEEK_END)
@@ -500,7 +491,32 @@ def send_to_client(client1):
             if not image_data:
                 fileToSend.close() 
                 break
-        
+
+# def send_to_client(client1):
+#     while True:
+#         data_message = client1.recv(1024).decode()
+#         if data_message == "READYTORECV":
+#             fileToSend = open('gotit.jpg', 'rb')
+#             fileToSend.seek(0, os.SEEK_END)
+#             file_size = fileToSend.tell()
+#             print("Size of file is :", file_size,"bytes")
+#             client1.send(str(file_size).encode())
+#             fileToSend.seek(0,0)
+#             print ("Sending file...")
+#             while True:
+#                 image_data = fileToSend.read(4096)
+#                 while (image_data):
+#                     client1.send(image_data)
+#                     image_data = fileToSend.read(4096)
+#                 if not image_data:
+#                     fileToSend.close() 
+#                     break
+
+
+# def letclientknow(client):
+#     x = clients[1]
+#     x.send("RECVXX".encode())
+
 #we add commands here
 def commands(message1, client):
     name_of_client = namelookup(client)
