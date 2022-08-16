@@ -13,7 +13,12 @@ from playsound import playsound #pip install playsound==1.2.2
 HOST = "127.0.0.1"
 PORT = 1400
 
+
 settings.init()
+
+# file_name = ""
+# last_file = ""
+
 
 class Client:
     def __init__(self, host, port):
@@ -60,7 +65,7 @@ class Client:
                 # Get data from server
                 data = self.clientsocket.recv(2048).decode()
 
-                print("RAW DATA {}".format(data))
+                #print("RAW DATA {}".format(data))
                 if data == "Username":
                     self.clientsocket.send(self.user_pass_json.encode())
 

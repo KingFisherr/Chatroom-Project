@@ -109,15 +109,13 @@ def receive():
                 clientconn.close()
                 continue
         else:
-            print("stored user info")
             # user cannot enter hashed password so it will not match database
-            #hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
-            
-            #print (f'before stored {hashed}')
+            hashed = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
+            # print (f'before stored {hashed}')
             # checking if DB exists before trying to store
-            #db.checkfordb('user_database.sqlite')
-            #db.storeuserinfo(username, hashed) 
-            db.storeuserinfo(username, password) 
+            db.checkfordb('user_database.sqlite')
+            db.storeuserinfo(username, hashed.decode())
+           
 
         # Update client list and username list with new client
         crypters.append(crypter)
@@ -161,7 +159,8 @@ def handler(client):
             if message == b"":
                 raise Exception("exception: received empty string")
 
-            # print("RECEIVED RAW {}".format(message))
+            #print("Cypher text = {}".format(message.decode()))
+            # broadcast(f"Cypher text = {message}\n", client)
             dmsg = crypter.decrypt_string(message)
 
             temp = dmsg.decode()
@@ -176,6 +175,7 @@ def handler(client):
             #print (f"THIS IS DSMG {dmsg}")
             elif re.search (r":\s/.",str(dmsg)):
                 broadcast_single(dmsg.decode(), client)
+
                 commands(dmsg, client)
 
             # Broadcast message to all clients
@@ -208,7 +208,8 @@ def handler(client):
 
 # Function sends message to all clients
 def broadcast(message, client):
-    print(f"broadcasting {message}")
+    #print(f"broadcasting {message}")
+    print(message)
     for x in clients:
         # skip the sender
         # if x == client:

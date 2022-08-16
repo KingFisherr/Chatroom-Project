@@ -86,17 +86,12 @@ class database:
         if not row:  # An empty result evaluates to False.
             return False
         else:
-            #hashed = str(row[0])
-            hashed = (row[0])
-            # print (f"Hashed {hashed}")
-            # print (f"Hashed encode{hashed.encode()}")
-            # print (f"REGULAR PASS = {password}, encoded password = {password.encode()}")
-            hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt(13))
-            # print (f"Hashed password{hashed_password}")
-            if bcrypt.checkpw(str(hashed_password).encode(), hashed):
-                return True
+            hashed = str(row[0])
+            if bcrypt.checkpw(password.encode(), hashed.encode()):
+               #print (f'Hashed Pass: {hashed}')
+               return True
             else:
-                return False
+               return False
                 
     # Method checks if user exists in ban_database
     def checkban(self, username):    
@@ -155,8 +150,9 @@ class database:
             return True        
 
 #'user_database.sqlite'
-db = database()
-db.getuserinfo()
+# db = database()
+# db.deleteRecord()
+# db.getuserinfo()
 # if db.checklogin("plu", "seed"):
 #     print ("yes")
 # else:
