@@ -1,4 +1,3 @@
-import imp
 import json
 import settings
 from pathlib import Path
@@ -262,7 +261,7 @@ class ChatBox(Frame):
         self.grid(row=0, column=0, sticky="nsew")
 
         self.chat_label = tkinter.Label(self, text="Chat:", fg="white", bg="#4682B4")
-        self.chat_label.config(font=("Calibri,12"))
+        self.chat_label.config(font=("Calibri,14"))
         self.chat_label.pack(padx=20, pady=5)
 
         self.text_area = tkinter.scrolledtext.ScrolledText(self, width=200, height=20)
@@ -270,7 +269,7 @@ class ChatBox(Frame):
         self.text_area.pack(padx=20, pady=5)
 
         self.message_label = tkinter.Label(self, text="Message:", fg="white", bg="#4682B4")
-        self.message_label.config(font=("Calibri,12"))
+        self.message_label.config(font=("Calibri,14"))
         self.message_label.pack(padx=20, pady=5)
 
         self.message_box = tkinter.Text(self, width=200, height=3)
@@ -279,23 +278,20 @@ class ChatBox(Frame):
         self.send_button = tkinter.Button(self, text="Send", bg="#4682B4", borderwidth=3,
                                           activebackground="#4682B4", activeforeground="Orange", command=self.chat)
         self.send_button.config(font=("Calibri,12"))
-        # self.send_button.pack(padx=20, pady=5)
-        # self.send_button.pack()
-        self.send_button.place(x=110.0, y=425.0, width=190.0, height=48.0)
-        #self.send_button = tkinter.Button(relief="flat")
+        self.send_button.place(x=110.0, y=500, width=190.0, height=48.0)
         
 
-        self.select_file_button = tkinter.Button(self, text="Open File", bg="#4682B4", borderwidth=3,
-                                                 relief="sunken", activebackground="#4682B4", activeforeground="Orange",
+        self.select_file_button = tkinter.Button(self, text="Upload File", bg="#4682B4", borderwidth=3,
+                                                activebackground="#4682B4", activeforeground="Orange",
                                                  command=self.get_file_path)
         self.select_file_button.config(font=("Calibri,12"))
-        self.select_file_button.place(x=409.0, y=425.0, width=190.0, height=48.0)
+        self.select_file_button.place(x=409.0, y=500, width=190.0, height=48.0)
 
-        self.send_file_button = tkinter.Button(self, text="Confirm File Choice", bg="#4682B4", borderwidth=3,
-                                               relief="sunken", activebackground="#4682B4", activeforeground="Orange",
+        self.send_file_button = tkinter.Button(self, text="Download File", bg="#4682B4", borderwidth=3,
+                                                activebackground="#4682B4", activeforeground="Orange",
                                                command=self.fileDownloadHandler)
         self.send_file_button.config(font=("Calibri,12"))
-        self.send_file_button.place(x=700.0, y=425.0, width=190.0, height=48.0)
+        self.send_file_button.place(x=700.0, y=500, width=190.0, height=48.0)
         self.gui_done = True
 
         # When window is closed we call end function
@@ -312,14 +308,13 @@ class ChatBox(Frame):
 
     def get_file_path(self):
         settings.file_name = filedialog.askopenfilename()
+        print (f"Settings is saved as {settings.file_name}")
         if settings.file_name is settings.last_file:
             print("NO FILE")
-            messagebox.showerror("Please select a folder first")
-            # Who to send tooijoijopifjdopifj
+            messagebox.showerror("Please select a file first")
         else:
             settings.last_file = settings.file_name
             self.file_handler()
-
 
     # def on_file_confirmed(self):
 #         global file_name
@@ -334,20 +329,19 @@ class ChatBox(Frame):
             # DO something with file name
 
     def file_handler(self):
-        #global file_name
-
-        # self.message_dict = {"File": file_name}
-        # self.message_dict = json.dumps(self.message_dict)
         message = "SENDXX"
         self.controller.client.send_message(message)
-        # Send file path as string to server
-        # {"type":"File", "body":"chatroom or a client"}
 
         
     def fileDownloadHandler(self):
-        message = "RECVXX"
-        #message = self.crypter.encrypt_string(message)
-        self.controller.client.send_message(message)    
+        if not settings.file_name:
+            print (settings.file_name)
+            print("No file available to download")
+            # We need to break or continue or something
+            # This checks locally, so no point... we need a flag from server letting us know there exists a file in the server ready to be downloaded.
+        else:
+            message = "RECVXX"
+            self.controller.client.send_message(message)    
 
     def chat(self, _event=None):
         #print("do something please")

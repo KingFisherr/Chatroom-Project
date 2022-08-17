@@ -1,3 +1,4 @@
+from http import client
 import os
 import re
 import json
@@ -12,7 +13,6 @@ from Crypto.Random import get_random_bytes
 
 # Create database object from dbmodels
 db = database()
-# Create encryption/decryption object from cypter 
 
 # Establish server host and port via socket object
 host = "127.0.0.1"
@@ -38,7 +38,7 @@ admins = []
 crypters = []
 
 
-# Need function to receieve connection from client
+# Fucntion to receive connection from client
 def receive():
     while True:
         clientconn, address = server.accept()
@@ -49,21 +49,17 @@ def receive():
 
         # user_pass_json var stores the username and password received from client as json
         user_pass_json = clientconn.recv(1024).decode()
-        # print (user_pass_json)
         user_pass_json = json.loads(user_pass_json)
 
         username = user_pass_json[0]
         password = user_pass_json[1]
-
-        # username = clientconn.recv(1024).decode()
-        # password = "banana"
 
         # Check if user is already in server, by checking username/client ip list
         if (ifuserexists(username)):
             clientconn.send("Duplicate".encode())
             clientconn.close()
             continue
-        # Notes argument taken in to IP
+
         # Check for ban database
         db.checkfordb('ban_database.sqlite')
         # Check if client is banned
@@ -84,15 +80,6 @@ def receive():
         time.sleep(1)
         clientconn.send(b64encode(recv_iv))
         clientconn.send(b64encode(send_iv))
-
-        # NOTES
-        # Currently we can kick banned user when they connect to server via username and password, should just be socket (ip address)
-        # Need to fix login checker
-
-        # We have a username and password
-        # First check user_info database to see if given username exists
-        # If it exists we can verify both username and password
-        # Else we will store the new username and password
 
         # Check for user database
         db.checkfordb('user_database.sqlite')
@@ -128,8 +115,6 @@ def receive():
         broadcast(f"{username} has joined the server\n", clientconn)
 
         # Let client know they are now connected to the chat server
-        # clientconn.send("You are now connected to the live chat server".encode())
-
         cstr = crypter.encrypt_string("You are now connected to the live chat server\n")
         clientconn.send(cstr)
 
@@ -154,13 +139,10 @@ def handler(client):
         try:
             # Get message from client
             message = client.recv(1024)
-             # data = {"type":"File", "body":"chatroom or client"}
 
             if message == b"":
                 raise Exception("exception: received empty string")
 
-            #print("Cypher text = {}".format(message.decode()))
-            # broadcast(f"Cypher text = {message}\n", client)
             dmsg = crypter.decrypt_string(message)
 
             temp = dmsg.decode()
@@ -170,7 +152,6 @@ def handler(client):
     
             elif temp == "RECVXX":
                 send_to_client(client)
-            #search for command
 
             #print (f"THIS IS DSMG {dmsg}")
             elif re.search (r":\s/.",str(dmsg)):
@@ -188,8 +169,6 @@ def handler(client):
                 print("received {}".format(dmsg.decode()))
                 broadcast(dmsg.decode(), client)
 
-            # Implement function or add on to this function for file transfer functionality
-
         except Exception as ex:
             print(ex)
             # Broadcast the user has disconnected
@@ -197,7 +176,6 @@ def handler(client):
             username = username_list[index]
             broadcast(f'{username} has left the chat\n', client)
 
-            # not thread safe, data race
             # Disconnect client from server and remove from list
             crypters.remove(crypter)
             username_list.remove(username)
@@ -208,13 +186,8 @@ def handler(client):
 
 # Function sends message to all clients
 def broadcast(message, client):
-    #print(f"broadcasting {message}")
     print(message)
     for x in clients:
-        # skip the sender
-        # if x == client:
-        #     continue
-
         try:
             crypter = client_to_crypter(x)
             # encrypt the message to send
@@ -237,22 +210,19 @@ def broadcast_disconnected(message, client):
             emsg = crypter.encrypt_string(message)
             x.send(emsg)
 
+# Function sends message to only one client
 def broadcast_single(message, client):
     for x in clients:
         if x == client:
             try:
                 crypter = client_to_crypter(x)
-                # encrypt the message to send
                 emsg = crypter.encrypt_string(message)
-                # ( ( ( hacky sleep cuz no size header ) ) )
-                #time.sleep(0.5)
-                # send the message to the target clientss
                 x.send(emsg)
             except Exception as ex:
                 print(ex)
 
 
-# Need additional non core administrative functions or similiar
+# Returns if user exists in user
 def ifuserexists(username):
     if username in username_list:
         return True
@@ -260,7 +230,7 @@ def ifuserexists(username):
         False
 
 
-# to access the username list and search for name for ip
+# Search for ip of given username
 def transverse(names):
     # transverse the user list one by one
     for num in range(len(username_list)):
@@ -281,7 +251,7 @@ def namelookup(ip_address):
     return -1
 
 
-# check if user is admin
+# Returns if user is admin
 def admincheck(usernamee):
     # check through the admin list to see if a user is inside the admin list
     for good in admins:
@@ -292,11 +262,11 @@ def admincheck(usernamee):
     return False
 
 
-# add user into admins
+# Add a user into admin list
 def adminadd(usernamess):
     admins.append(usernamess)
 
-#ping function
+# Ping function
 def ping(message1,client1):
     crypter = client_to_crypter(client1)
     if re.search (r"@.+",str(message1)):
@@ -327,7 +297,7 @@ def ping(message1,client1):
     else:
         client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
 
-# kick function
+# Kick function
 def kick(mess, client1):
     crypter = client_to_crypter(client1)
     # if they found kick inside the message
@@ -347,16 +317,10 @@ def kick(mess, client1):
             found = transverse(target[0])
             # close the GUI
             found.send("Exit".encode())
-            # then we disconnect them
-            #found.close()
-        # if the function can't find a user, then there exist no user in the database
         else:
             client1.send(crypter.encrypt_string("User doesn't exist please double check\n"))
-            #client1.send("User doesn't exist please double check\n".encode())
-    # if we didnt have a "/kick user" in the format then we will return the message.
     else:
         client1.send(crypter.encrypt_string("Please check if you have the right format for the command\n"))
-        #client1.send("Please check if you have the right format for the command\n".encode())
 
 
 
@@ -460,7 +424,7 @@ def sendfile(client1):
     remaining = client1.recv(1024).decode()
     temp_rem = remaining
     remaining = int(remaining)
-    client1.send(crypter.encrypt_string(f"You are sending file of size: {remaining}\n"))
+    client1.send(crypter.encrypt_string(f"You are sending file of size: {remaining} bytes\n"))
     with open('gotit.jpg','wb') as file:
         while remaining:
             image_data = client1.recv(min(4096,remaining))
@@ -469,11 +433,14 @@ def sendfile(client1):
         file.close()
         help_message = "Server has received the entire file\n"       
         help_message = crypter.encrypt_string(help_message)
-        client1.send(help_message)  
+        client1.send(help_message) 
+        # Name of client has sent a file, click download to view. 
+        broadcast_disconnected(f"{namelookup(client1)} has uploaded a file to the server. Click download to view!", client1)
 
+
+# Function to send files to client
 def send_to_client(client1):
-    client1 = clients[1]
-    print (namelookup(client1))
+    
     client1.send("RecvImage".encode())
     fileToSend = open('gotit.jpg', 'rb')
     fileToSend.seek(0, os.SEEK_END)
@@ -492,31 +459,6 @@ def send_to_client(client1):
             if not image_data:
                 fileToSend.close() 
                 break
-
-# def send_to_client(client1):
-#     while True:
-#         data_message = client1.recv(1024).decode()
-#         if data_message == "READYTORECV":
-#             fileToSend = open('gotit.jpg', 'rb')
-#             fileToSend.seek(0, os.SEEK_END)
-#             file_size = fileToSend.tell()
-#             print("Size of file is :", file_size,"bytes")
-#             client1.send(str(file_size).encode())
-#             fileToSend.seek(0,0)
-#             print ("Sending file...")
-#             while True:
-#                 image_data = fileToSend.read(4096)
-#                 while (image_data):
-#                     client1.send(image_data)
-#                     image_data = fileToSend.read(4096)
-#                 if not image_data:
-#                     fileToSend.close() 
-#                     break
-
-
-# def letclientknow(client):
-#     x = clients[1]
-#     x.send("RECVXX".encode())
 
 #we add commands here
 def commands(message1, client):

@@ -153,16 +153,3 @@ class database:
 # db = database()
 # db.deleteRecord()
 # db.getuserinfo()
-# if db.checklogin("plu", "seed"):
-#     print ("yes")
-# else:
-#     print ("no")
-# # db.checkfordb('ban_database.sqlite')
-
-# db.storebaninfo("justforfun@", "ipaddress2")
-# # # db.checkban("justforfun@","ipaddress2")
-
-# db.getbaninfo()
-
-# #db.checklogin('bot', 'botpass2')
-# # db.checkdb()
