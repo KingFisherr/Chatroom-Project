@@ -20,7 +20,7 @@ class App(Tk):
     def __init__(self, client):
         Tk.__init__(self)
         self.title("Chatroom App")
-        self.geometry("1012x506")
+        self.geometry("1012x506") 
         self.client = client;
         self.gui_done = False
         self.gui_running = True
@@ -264,7 +264,7 @@ class ChatBox(Frame):
         self.chat_label.config(font=("Calibri,14"))
         self.chat_label.pack(padx=20, pady=5)
 
-        self.text_area = tkinter.scrolledtext.ScrolledText(self, width=200, height=20)
+        self.text_area = tkinter.scrolledtext.ScrolledText(self, width=200, height=20) 
         self.text_area.config(state='disabled')
         self.text_area.pack(padx=20, pady=5)
 
@@ -334,14 +334,22 @@ class ChatBox(Frame):
 
         
     def fileDownloadHandler(self):
-        if not settings.file_name:
-            print (settings.file_name)
-            print("No file available to download")
-            # We need to break or continue or something
-            # This checks locally, so no point... we need a flag from server letting us know there exists a file in the server ready to be downloaded.
-        else:
-            message = "RECVXX"
-            self.controller.client.send_message(message)    
+
+        check_for_file = "CXFXL"
+        self.controller.client.send_message(check_for_file)    
+
+        # if not settings.file_name:
+        #     print (settings.file_name)
+        #     print("No file available to download")
+        #     # We need to break or continue or something
+        #     # This checks locally, so no point... we need a flag from server letting us know there exists a file in the server ready to be downloaded.
+
+    def no_file(self):
+        print("No file available to download")
+    
+    def xqc(self):
+        message = "RECVXX"
+        self.controller.client.send_message(message)    
 
     def chat(self, _event=None):
         #print("do something please")

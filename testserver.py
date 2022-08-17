@@ -1,4 +1,3 @@
-from http import client
 import os
 import re
 import json
@@ -37,6 +36,8 @@ admins = []
 # List of crypters
 crypters = []
 
+# Flag which changes if a file is on the server
+file_flag = 0
 
 # Fucntion to receive connection from client
 def receive():
@@ -124,13 +125,6 @@ def receive():
         # send_to_clientthread = threading.Thread(target=send_to_client, args=(clientconn,))
         # send_to_clientthread.start()
 
-def client_to_crypter(client):
-    # get the index of the target client
-    index = clients.index(client)
-    # get the crypter of the target client
-    return crypters[index]
-
-
 # Functions handles messages sent to server by clients
 def handler(client):
     crypter = client_to_crypter(client)
@@ -148,21 +142,24 @@ def handler(client):
             temp = dmsg.decode()
 
             if temp == "SENDXX":
-                sendfile(client)                
+                get_from_client(client)                
     
             elif temp == "RECVXX":
                 send_to_client(client)
+            
+            elif temp == "CXFXL":
+                check_for_client(client)
+                
 
             #print (f"THIS IS DSMG {dmsg}")
             elif re.search (r":\s/.",str(dmsg)):
                 broadcast_single(dmsg.decode(), client)
-
                 commands(dmsg, client)
 
             # Broadcast message to all clients
             elif re.search (r"@.",str(dmsg)):
-                ping(dmsg, client)
                 broadcast(dmsg.decode(), client)
+                ping(dmsg, client)
 
             else:
                 # Broadcast message to all clients
@@ -183,6 +180,11 @@ def handler(client):
             client.close()
             break
 
+def client_to_crypter(client):
+    # get the index of the target client
+    index = clients.index(client)
+    # get the crypter of the target client
+    return crypters[index]
 
 # Function sends message to all clients
 def broadcast(message, client):
@@ -290,7 +292,10 @@ def ping(message1,client1):
                     found = transverse(i)
                     # ping it 
                     found.send("Pinged".encode())
-                    client1.send(crypter.encrypt_string("Pinged!\n"))
+                    time.sleep(0.1)
+                    broadcast_single("Pinged!\n", found)
+                    #found.send(crypter.encrypt_string("Pinged!\n"))
+                    break
                 else:
                     client1.send(crypter.encrypt_string("user"))
     #if we didnt have a "@user" in the format then we will return the message.
@@ -415,8 +420,8 @@ def filePermission(client1):
         return "CLIENT"
 
 # Function to send files to server
-# After update handler will call sendfile when it receives type file
-def sendfile(client1):
+# After update handler will call get_from_client when it receives type file
+def get_from_client(client1):
     # We need to tell client we are ready to recieve a file 
     client1.send("SendImage".encode())
     crypter = client_to_crypter(client1)
@@ -431,11 +436,13 @@ def sendfile(client1):
             remaining -= len(image_data)
             file.write(image_data)
         file.close()
+        global file_flag
+        file_flag = 1
         help_message = "Server has received the entire file\n"       
         help_message = crypter.encrypt_string(help_message)
         client1.send(help_message) 
         # Name of client has sent a file, click download to view. 
-        broadcast_disconnected(f"{namelookup(client1)} has uploaded a file to the server. Click download to view!", client1)
+        broadcast_disconnected(f"{namelookup(client1)} has uploaded a file to the server. Click download to view!\n", client1)
 
 
 # Function to send files to client
@@ -460,6 +467,14 @@ def send_to_client(client1):
                 fileToSend.close() 
                 break
 
+def check_for_client(client1):
+    global file_flag
+    print (f"File Flag is {file_flag}")
+    if file_flag == 1:
+        client1.send("GoodF".encode())
+    else:
+        client1.send("BadF".encode())
+
 #we add commands here
 def commands(message1, client):
     name_of_client = namelookup(client)
@@ -479,8 +494,8 @@ def commands(message1, client):
         bans(message1, client)
     elif "/admin" in str(message1):
         New_admin(client, name_of_client)
-    elif "/sendfile" in str(message1):
-        sendfile(client)
+    elif "/get_from_client" in str(message1):
+        get_from_client(client)
     else:
         client.send(crypterX.encrypt_string("Command Not Found, Use /help to Check for Command\n"))
         #client.send("Command Not Found, Use /help to Check for Command\n".encode())

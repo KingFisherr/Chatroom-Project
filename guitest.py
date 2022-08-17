@@ -16,9 +16,6 @@ PORT = 1400
 
 settings.init()
 
-# file_name = ""
-# last_file = ""
-
 
 class Client:
     def __init__(self, host, port):
@@ -134,7 +131,13 @@ class Client:
                     print (path)
                     im = Image.open(path)
 
-                    im.show()                   
+                    im.show()     
+
+                elif data == "GoodF":
+                    self.app.chat_frame.xqc()        
+
+                elif data == "BadF":
+                    self.app.chat_frame.no_file()
 
                 elif data == "IV":
                     send_iv = b64decode(self.clientsocket.recv(24).decode())
