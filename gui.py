@@ -161,7 +161,7 @@ class Login(Frame):
             90.0,
             431.0,
             anchor="nw",
-            text="© Tahsin, Haoming, Jonathan, 2022",
+            text="© 2022",
             fill="#FFFFFF",
             font=("Montserrat Bold", 18 * -1),
         )
@@ -174,7 +174,7 @@ class Login(Frame):
             90.0,
             150.0,
             anchor="nw",
-            text="Is a regular instant",
+            text="Is an instant messaging",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -183,7 +183,7 @@ class Login(Frame):
             90.0,
             179.0,
             anchor="nw",
-            text="messaging application with",
+            text="application supported by",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -192,7 +192,7 @@ class Login(Frame):
             90.0,
             208.0,
             anchor="nw",
-            text="end-to-end encryption.",
+            text="custom end-to-end encryption.",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -219,7 +219,7 @@ class Login(Frame):
             90.0,
             295.0,
             anchor="nw",
-            text="around the world. Login to",
+            text="without worrying about security.",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -228,7 +228,7 @@ class Login(Frame):
             90.0,
             324.0,
             anchor="nw",
-            text="send messages and media",
+            text="Login or",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
@@ -237,7 +237,7 @@ class Login(Frame):
             90.0,
             353.0,
             anchor="nw",
-            text="to users like you . . .",
+            text="Sign Up now",
             fill="#FFFFFF",
             font=("Montserrat Regular", 18 * -1),
         )
