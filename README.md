@@ -37,9 +37,9 @@ LiveChat is an application which implements a program allowing concurrent commun
 
 
     - What server sees: Encrypted Data
-        ![](https://i.imgur.com/WXFbp1c.png)
+        <img src='https://i.imgur.com/WXFbp1c.png' title='Video Walkthrough' width='300' alt='Video Walkthrough' />
     - What client sees: Decrypted Data
-        ![](https://i.imgur.com/SZabiHc.png)
+         <img src='https://i.imgur.com/SZabiHc.png' title='Video Walkthrough' width='300' alt='Video Walkthrough' />
 
 ## Design/Implementation
 
