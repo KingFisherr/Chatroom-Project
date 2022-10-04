@@ -36,10 +36,10 @@ LiveChat is an application which implements a program allowing concurrent commun
 
 
 
-    - What server sees: Encrypted Data
-        <img src='https://i.imgur.com/WXFbp1c.png' title='Video Walkthrough' width='300' alt='Video Walkthrough' />
-    - What client sees: Decrypted Data
-         <img src='https://i.imgur.com/SZabiHc.png' title='Video Walkthrough' width='300' alt='Video Walkthrough' />
+- What server sees: Encrypted Data
+    <img src='https://i.imgur.com/WXFbp1c.png' title='Video Walkthrough' width='300' alt='Video Walkthrough' />
+- What client sees: Decrypted Data
+     <img src='https://i.imgur.com/SZabiHc.png' title='Video Walkthrough' width='300' alt='Video Walkthrough' />
 
 ## Design/Implementation
 
@@ -59,17 +59,25 @@ LiveChat is an application which implements a program allowing concurrent commun
 |UserInfo Database| Database| Contains hashed user info (sqlite)
 |BannedUser Database|Database|Contains banned user info (sqlite)
 
-#### Server Program Functions
-    -(READ/GET) Queries the live games details given by given gameID
-    -(READ/GET) Queries the player headshots
-    -(READ/GET) Queries the player stats
-    -(READ/GET) Queries the team logo    
+#### Server Module Functions
+    - Sets up connection for potential clients
+    - Used multithreading to ensure concurrency for clients
+    - Sets up GUI for clients
+    - Creates and handles errors to avoid thread errors or server crash
 
-#### Client Program Functions
-    -(READ/GET) Queries the live games details given by given gameID
-    -(READ/GET) Queries the player headshots
-    -(READ/GET) Queries the player stats
-    -(READ/GET) Queries the team logo    
+#### Client Module Functions
+    - Used by client to connect to server
+    - Each client programs runs on individual thread
+    - Client has user interface for interaction
+    
+#### Encryption/ Decryption Module Functions
+    -(READ/GET) Used to retrive encrypted or decrypted value
+    -(WRITE/PUT) Used to send data to module to be encrpyted or decrypted
+    
+#### Database Module Functions
+    -(READ/GET) Used to retreive key value pairs from database
+    -(WRITE/PUT) Insert data into database
+    -(DELETE) Delete data in database
 
 ## Requirements 
 
