@@ -94,7 +94,7 @@ An untrained instance of ChatterBot starts off with no knowledge of how to commu
 Required packages can be installed with pip:
 
 ```
- pip install json
+ (e.g.) pip install json
 ```
 ### Run Program
 
